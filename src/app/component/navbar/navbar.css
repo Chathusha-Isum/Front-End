@@ -1,0 +1,9 @@
+ .dropdown { display: none; }
+ .mega-menu { display: none; }
+ .submenu { display: none; }
+ .nav-item:hover > .dropdown { display: block; }
+ .nav-item:hover > .mega-menu { display: block; }
+ .nav-item:hover .mega-menu { display: block; }
+ .dropdown-item:hover > .submenu { display: block; }
+ .mobile-menu { display: none; }
+ .mobile-menu.active { display: block; }

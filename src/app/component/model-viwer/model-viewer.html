@@ -1,0 +1,81 @@
+<div class="model-viewer-container">
+  <div #canvasContainer class="canvas-wrapper"></div>
+  
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" *ngIf="isLoading">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Loading Model... {{ loadingProgress | number: '1.0-0' }}%</div>
+    <div class="loading-bar">
+      <div class="loading-bar-fill" [style.width]="loadingProgress + '%'"></div>
+    </div>
+  </div>
+  
+  <!-- Material Editor Panel -->
+  <div class="material-editor" *ngIf="showMaterialEditor && currentModel">
+    <div class="editor-header">
+      <h3>🎨 Customize Your Car</h3>
+      <button class="close-btn" (click)="toggleMaterialEditor()">✕</button>
+    </div>
+    
+    <!-- Backend Colors Section -->
+    <div class="editor-section" *ngIf="backendColors.length > 0">
+      <label>🎯 Available Colors</label>
+      <div class="color-palette">
+        <div *ngFor="let color of backendColors" 
+             class="color-swatch" 
+             [style.backgroundColor]="color.colorCode"
+             [class.active]="selectedColor === color.colorCode"
+             (click)="applyColorPreset(color.colorCode)"
+             [title]="color.name">
+        </div>
+      </div>
+    </div>
+    
+    <div class="editor-section">
+      <label>🎨 Custom Color</label>
+      <div class="custom-color">
+        <input type="color" [(ngModel)]="selectedColor" (change)="smartColorChange(selectedColor)">
+        <span class="color-hex">{{ selectedColor }}</span>
+      </div>
+    </div>
+    
+    <div class="editor-section">
+      <label>✨ Finish Settings</label>
+      <div class="property-group">
+        <span>Roughness: {{ materialRoughness | number:'1.2-2' }}</span>
+        <input type="range" min="0" max="1" step="0.01" [(ngModel)]="materialRoughness" (input)="updateSelectedMaterialProperties()">
+      </div>
+      <div class="property-group">
+        <span>Metalness: {{ materialMetalness | number:'1.2-2' }}</span>
+        <input type="range" min="0" max="1" step="0.01" [(ngModel)]="materialMetalness" (input)="updateSelectedMaterialProperties()">
+      </div>
+    </div>
+    
+    <div class="editor-section">
+      <label>🚗 Special Finishes</label>
+      <div class="texture-grid">
+        <button *ngFor="let texture of carTextures" 
+                class="texture-btn"
+                [class.active]="selectedTexture === texture.id"
+                (click)="applyTexturePreset(texture.id)">
+          {{ texture.name }}
+        </button>
+      </div>
+    </div>
+    
+    <div class="editor-actions">
+      <button class="action-btn reset" (click)="resetToOriginalMaterials()">
+        🔄 Reset to Original Colors
+      </button>
+    </div>
+  </div>
+  
+  <!-- Customize Button -->
+  <button class="customize-btn" (click)="toggleMaterialEditor()" *ngIf="currentModel && !showMaterialEditor">
+    🎨 Customize Car
+  </button>
+  
+  <button class="customize-btn close-customize" (click)="toggleMaterialEditor()" *ngIf="currentModel && showMaterialEditor">
+    ✕ Close Customizer
+  </button>
+</div>
