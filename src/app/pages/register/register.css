@@ -1,0 +1,237 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+/* Main Container */
+.categories-container {
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+/* Title */
+.categories-title {
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+.categories-title h1 {
+    font-size: 2.5rem;
+    color: white;
+    margin-bottom: 10px;
+    font-weight: 700;
+}
+
+.categories-title p {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Curved Buttons Grid */
+.curved-grid {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+}
+
+/* Individual Curved Button */
+.curved-btn {
+    position: relative;
+    width: 180px;
+    height: 200px;
+    background: white;
+    border-radius: 40px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    text-decoration: none;
+    display: block;
+}
+
+/* Curved bottom effect */
+.curved-btn::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: inherit;
+    border-radius: 40px 40px 0 0;
+    transform: scaleY(-1);
+}
+
+/* Inner Content */
+.btn-content {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
+    border-radius: 40px;
+    transition: all 0.3s ease;
+}
+
+/* Hover Effect */
+.curved-btn:hover {
+    transform: translateY(-10px) scale(1.05);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.curved-btn:hover .btn-content {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.curved-btn:hover .btn-icon svg,
+.curved-btn:hover .btn-icon img {
+    filter: brightness(0) invert(1);
+}
+
+.curved-btn:hover .btn-title {
+    color: white;
+}
+
+.curved-btn:hover .btn-desc {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Icon Styles */
+.btn-icon {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-icon svg {
+    width: 100%;
+    height: 100%;
+    transition: all 0.3s ease;
+}
+
+.btn-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    transition: all 0.3s ease;
+}
+
+/* Text Styles */
+.btn-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 5px;
+    transition: all 0.3s ease;
+}
+
+.btn-desc {
+    font-size: 0.7rem;
+    color: #666;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+/* Different Curve Variations */
+.curved-btn.different-curve {
+    border-radius: 50px 50px 30px 30px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .curved-grid {
+        gap: 20px;
+    }
+
+    .curved-btn {
+        width: 150px;
+        height: 170px;
+    }
+
+    .btn-icon {
+        width: 60px;
+        height: 60px;
+    }
+
+    .btn-title {
+        font-size: 1rem;
+    }
+
+    .categories-title h1 {
+        font-size: 1.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .curved-grid {
+        gap: 15px;
+    }
+
+    .curved-btn {
+        width: 130px;
+        height: 150px;
+    }
+
+    .btn-icon {
+        width: 50px;
+        height: 50px;
+    }
+}
+
+/* Animation */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.curved-btn {
+    animation: fadeInUp 0.5s ease forwards;
+    opacity: 0;
+}
+
+.curved-btn:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.curved-btn:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.curved-btn:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+.curved-btn:nth-child(4) {
+    animation-delay: 0.4s;
+}
+
+.curved-btn:nth-child(5) {
+    animation-delay: 0.5s;
+}
