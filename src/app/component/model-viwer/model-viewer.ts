@@ -121,7 +121,7 @@ export class ModelViewer implements OnInit, OnDestroy {
     const width = this.canvasContainer.nativeElement.clientWidth || window.innerWidth;
     const height = this.canvasContainer.nativeElement.clientHeight || window.innerHeight;
     
-    this.camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+    this.camera = new THREE.PerspectiveCamera(20, width / height, 0.1, 1000);
     this.camera.position.set(4, 2.5, 6);
     this.camera.lookAt(0, 0, 0);
 

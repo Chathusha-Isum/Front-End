@@ -16,7 +16,7 @@ export const routes: Routes = [
         component: Upload
     },
     {
-        path: "aboutus",
+        path: "about-us",
         component: Aboutus
     },
     {
