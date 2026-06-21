@@ -1,9 +1,11 @@
 import { Component } from '@angular/core';
+import { Carlist } from '../../component/carlist/carlist';
 
 @Component({
-  selector: 'app-cars',
-  imports: [],
+  selector: 'app-item',
+  standalone: true,
+  imports: [Carlist],
   templateUrl: './cars.html',
-  styleUrl: './cars.css',
+  styleUrls: ['./cars.css']
 })
 export class Cars {}

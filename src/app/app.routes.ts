@@ -5,6 +5,7 @@ import { Aboutus } from './pages/aboutus/aboutus';
 import { Home } from './pages/home/home';
 import { Login } from './pages/login/login';
 import { Register } from './pages/register/register';
+import { Cars } from './pages/cars/cars';
 
 export const routes: Routes = [
     {
@@ -26,6 +27,10 @@ export const routes: Routes = [
     {
         path: "register",
         component: Register
+    },
+    {
+        path: "cars",
+        component: Cars
     },
     
 ];

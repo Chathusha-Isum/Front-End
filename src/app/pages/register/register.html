@@ -29,25 +29,25 @@
 
             <form class="space-y-4">
                 <div class="flex flex-col md:flex-row gap-4">
-                    <input type="text" placeholder="First name"
+                    <input type="text" placeholder="First name" name="fname" [(ngModel)]="user.fname"
                         class="w-full md:w-1/2 bg-[#1c1c24] text-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-600">
-                    <input type="text" placeholder="Last name"
+                    <input type="text" placeholder="Last name" name="lname" [(ngModel)]="user.lname"
                         class="w-full md:w-1/2 bg-[#1c1c24] text-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-600">
                 </div>
 
-                <input type="email" placeholder="Email"
+                <input type="email" placeholder="Email" [(ngModel)]="user.email" name="email"
                     class="w-full bg-[#1c1c24] text-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-600">
 
-                <input type="tel" placeholder="Contact Number"
+                <input type="tel" placeholder="Contact Number" [(ngModel)]="user.contact" name="contact"
                     class="w-full bg-[#1c1c24] text-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-600">
 
                 <!-- Address Field -->
-                <input type="text" placeholder="Street Address"
+                <input type="text" placeholder="Street Address" [(ngModel)]="user.address" name="address"
                     class="w-full bg-[#1c1c24] text-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-600">
-                <input type="password" placeholder="Enter your password"
+                <input type="password" placeholder="Enter your password" [(ngModel)]="user.password" name="password"
                     class="w-full bg-[#1c1c24] text-white rounded-lg p-3 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-600">
 
-                <input type="password" placeholder="Confirm your password"
+                <input type="password" placeholder="Confirm your password" [(ngModel)]="user.confirm_password" name="confirm_password"
                     class="w-full bg-[#1c1c24] text-white rounded-lg p-3 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-600">
 
                 <!-- Seller / Buyer Radio Buttons -->
@@ -55,15 +55,15 @@
                     <label class="text-gray-400 text-sm block mb-2">I am a:</label>
                     <div class="flex gap-6">
                         <label class="flex items-center space-x-2 cursor-pointer">
-                            <input type="radio" name="userType" value="buyer" class="rounded-full bg-[#1c1c24] border-gray-600 text-blue-600 focus:ring-blue-600" checked>
+                            <input type="radio" name="userType" value="buyer" [(ngModel)]="user.role" name="role" class="rounded-full bg-[#1c1c24] border-gray-600 text-blue-600 focus:ring-blue-600" checked>
                             <span class="text-white">Buyer</span>
                         </label>
                         <label class="flex items-center space-x-2 cursor-pointer">
-                            <input type="radio" name="userType" value="seller" class="rounded-full bg-[#1c1c24] border-gray-600 text-blue-600 focus:ring-blue-600">
+                            <input type="radio" name="userType" value="seller" [(ngModel)]="user.role" name="role" class="rounded-full bg-[#1c1c24] border-gray-600 text-blue-600 focus:ring-blue-600">
                             <span class="text-white">Seller</span>
                         </label>
                         <label class="flex items-center space-x-2 cursor-pointer">
-                            <input type="radio" name="userType" value="both" class="rounded-full bg-[#1c1c24] border-gray-600 text-blue-600 focus:ring-blue-600">
+                            <input type="radio" name="userType" value="both" [(ngModel)]="user.role" name="role" class="rounded-full bg-[#1c1c24] border-gray-600 text-blue-600 focus:ring-blue-600">
                             <span class="text-white">Both</span>
                         </label>
                     </div>
@@ -79,7 +79,8 @@
 
                 <!-- Submit Button -->
                 <button type="submit"
-                    class="w-full bg-blue-600 text-white rounded-lg p-3 hover:bg-blue-700 transition-colors">
+                    class="w-full bg-blue-600 text-white rounded-lg p-3 hover:bg-blue-700 transition-colors"
+                    (click)="register()">
                     Create account
                 </button>
 
