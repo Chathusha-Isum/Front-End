@@ -2,7 +2,7 @@
     <div *ngFor="let data of list"
         class="w-full max-w-xs rounded-lg border shadow-sm overflow-hidden bg-gray-500 shadow-stone-950/5 flex flex-col">
 
-        <img [src]="data.image || defaultImage" [alt]="data.title"
+        <img [src]="data.imgpath || defaultImage" [alt]="data.title"
             class="w-[calc(100%-16px)] h-48 object-cover rounded m-2" />
 
         <div class="w-full h-max rounded px-3.5 py-2.5">

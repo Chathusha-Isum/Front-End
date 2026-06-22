@@ -31,10 +31,10 @@ export class Carlist implements OnInit {
     this.error = '';
     
     
-    this.http.get('http://localhost:8080/product/details')
+    this.http.get('http://localhost:8080/product/')
       .subscribe({
-        next: (data: any) => {          
-          this.list = data;
+        next: (data: any) => {       
+          this.list = data.data;
           this.loading = false;
           
           this.cdr.detectChanges();

@@ -6,6 +6,7 @@ import { Home } from './pages/home/home';
 import { Login } from './pages/login/login';
 import { Register } from './pages/register/register';
 import { Cars } from './pages/cars/cars';
+import { Dashboard } from './pages/dashboard/dashboard';
 
 export const routes: Routes = [
     {
@@ -31,6 +32,10 @@ export const routes: Routes = [
     {
         path: "cars",
         component: Cars
+    },
+    {
+        path: "dashboard",
+        component: Dashboard
     },
     
 ];

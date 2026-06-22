@@ -23,6 +23,7 @@ export class Login {
     this.http.post("http://localhost:8080/user/login",this.user).subscribe({
       next: (response: any)=>{
         this.showMessage(response.message);
+        localStorage.setItem("email",this.user.email);
         this.router.navigate(["/dashboard"]);
       },
       error: (err)=>{

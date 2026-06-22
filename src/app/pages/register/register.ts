@@ -37,6 +37,7 @@ export class Register {
     this.http.post("http://localhost:8080/user/", this.user).subscribe({
       next: (response: any) => {
         this.showMessage(response.message);
+        localStorage.setItem("email", this.user.email);
         this.router.navigate(["/dashboard"]);
       },
       error: (error) => {
