@@ -1,7 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import {  Router } from '@angular/router';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-carlist',
@@ -15,6 +15,7 @@ export class Carlist implements OnInit {
   loading = false;
   error = '';
   defaultImage = 'https://raw.githubusercontent.com/creativetimofficial/public-assets/master/ct-assets/mt-demo.jpg';
+  private apiUrl = 'http://localhost:8080';
 
   constructor(
     private http: HttpClient,
@@ -30,24 +31,61 @@ export class Carlist implements OnInit {
     this.loading = true;
     this.error = '';
     
-    
-    this.http.get('http://localhost:8080/product/')
+    this.http.get(`${this.apiUrl}/product/`)
       .subscribe({
         next: (data: any) => {       
-          this.list = data.data;
+          this.list = data.data || [];
           this.loading = false;
-          
           this.cdr.detectChanges();
-          
         },
         error: (error) => {
-          this.error = 'Failed to load cars. Please try again.';
+          console.error('Error fetching cars:', error);
+          this.error = error.error?.message || 'Failed to load cars. Please try again.';
           this.loading = false;
           this.cdr.detectChanges();
         }
       });
   }
-  navigate(id: any):void{
-    this.router.navigate(["/upload"]);
+
+  /**
+   * Get full image URL
+   */
+  getImageUrl(imgpath: string): string {
+    if (!imgpath) return this.defaultImage;
+    // If it's already a full URL (starts with http)
+    if (imgpath.startsWith('http://') || imgpath.startsWith('https://')) {
+      return imgpath;
+    }
+    // If it's a relative path from uploads
+    if (imgpath.startsWith('/uploads/')) {
+      return `${this.apiUrl}${imgpath}`;
+    }
+    // If it's just a filename, assume it's in uploads/cars
+    return `${this.apiUrl}/uploads/cars/${imgpath}`;
+  }
+
+  /**
+   * Get model URL for 3D viewer
+   */
+  getModelUrl(modelpath: string): string {
+    if (!modelpath) return '';
+    const filename = modelpath.split('/').pop();
+    return `${this.apiUrl}/api/models/cars/${filename}`;
+  }
+
+  /**
+   * Navigate to car details page
+   */
+  navigate(id: string): void {
+    localStorage.setItem('car', id);
+    this.router.navigate(['/car-details']);
+  }
+
+  /**
+   * Format price with LKR
+   */
+  formatPrice(price: number): string {
+    if (!price) return 'LKR 0';
+    return `LKR ${price.toLocaleString()}`;
   }
 }

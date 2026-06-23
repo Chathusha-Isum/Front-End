@@ -1,0 +1,70 @@
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
+    <!-- Loading State -->
+    <div *ngIf="loading" class="col-span-full text-center py-12">
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-pink-500 border-t-transparent"></div>
+        <p class="text-slate-400 mt-4">Loading parts...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error" class="col-span-full text-center py-12">
+        <div class="text-red-400 text-xl mb-4">⚠️ {{ error }}</div>
+        <button (click)="fetchData()" 
+                class="px-4 py-2 bg-pink-500/20 text-pink-300 rounded-lg hover:bg-pink-500/30 transition-colors">
+            Retry
+        </button>
+    </div>
+
+    <!-- Part Cards -->
+    <div *ngFor="let data of list" (click)="navigate(data.id)"
+        class="w-full max-w-xs rounded-lg border shadow-sm overflow-hidden bg-gray-800/50 border-white/5 shadow-stone-950/5 flex flex-col hover:border-pink-500/30 hover:shadow-pink-500/10 transition-all duration-300 cursor-pointer">
+
+        <!-- Part Image -->
+        <img [src]="getImageUrl(data.imgpath)" 
+             [alt]="data.name"
+             (error)="data.imgpath = defaultImage"
+             class="w-[calc(100%-16px)] h-48 object-cover rounded m-2 bg-gray-700" />
+
+        <div class="w-full h-max rounded px-3.5 py-2.5">
+            <!-- Condition Badge -->
+            <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider border"
+                  [class]="getConditionColor(data.condition)">
+                {{ data.condition || 'Unknown' }}
+            </span>
+            
+            <!-- Part Name -->
+            <h6 class="font-sans antialiased font-bold text-base md:text-lg lg:text-xl text-white mt-1">
+                {{ data.name }}
+            </h6>
+            
+            <!-- Compatible Car -->
+            <p class="font-sans antialiased text-sm text-slate-400 mt-1 flex items-center gap-1">
+                <i class="fas fa-car text-xs"></i> 
+                Fits: {{ data.car || 'Various Models' }}
+            </p>
+
+            <!-- Quantity -->
+            <div class="flex items-center gap-2 mt-2 text-xs">
+                <span class="flex items-center gap-1 text-slate-400">
+                    <i class="fas fa-boxes"></i> 
+                    Stock: <span class="text-white font-medium">{{ data.qty || 0 }}</span>
+                </span>
+            </div>
+
+            <!-- Price -->
+            <div class="flex items-center justify-between mt-3 pt-3 border-t border-white/5">
+                <span class="text-amber-300 font-bold text-lg">
+                    {{ formatPrice(data.price) }}
+                </span>
+                <span class="text-[10px] text-slate-400 flex items-center gap-1">
+                    <i class="fas fa-cog"></i> View Details
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!loading && !error && list.length === 0" class="col-span-full text-center py-12">
+        <i class="fas fa-cogs text-4xl text-slate-600 mb-4 block"></i>
+        <p class="text-slate-400">No parts available at the moment.</p>
+    </div>
+</div>

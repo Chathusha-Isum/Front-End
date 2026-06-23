@@ -1,12 +1,16 @@
 import { Routes } from '@angular/router';
 
-import {Upload} from './pages/upload/upload';
+import { CarDetails } from './pages/car-details/car-details';
 import { Aboutus } from './pages/aboutus/aboutus';
 import { Home } from './pages/home/home';
 import { Login } from './pages/login/login';
 import { Register } from './pages/register/register';
 import { Cars } from './pages/cars/cars';
-import { Dashboard } from './pages/dashboard/dashboard';
+import { Parts } from './pages/parts/parts';
+import { Buyer } from './pages/buyer/buyer';
+import { Seller } from './pages/seller/seller';
+import { Addproduct } from './pages/addproduct/addproduct';
+import { Addpart } from './pages/addpart/addpart';
 
 export const routes: Routes = [
     {
@@ -14,8 +18,8 @@ export const routes: Routes = [
         component:Home
     },
     {
-        path: "upload",
-        component: Upload
+        path: "car-details",
+        component: CarDetails
     },
     {
         path: "about-us",
@@ -34,8 +38,24 @@ export const routes: Routes = [
         component: Cars
     },
     {
-        path: "dashboard",
-        component: Dashboard
+        path: "parts",
+        component: Parts
+    },
+    {
+        path: "buyer-dashboard",
+        component: Buyer
+    },
+    {
+        path: "seller-dashboard",
+        component: Seller
+    },
+    {
+        path: "add-product",
+        component: Addproduct
+    },
+    {
+        path: "add-part",
+        component: Addpart
     },
     
 ];

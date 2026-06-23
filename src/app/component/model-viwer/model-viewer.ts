@@ -27,13 +27,13 @@ interface MaterialInfo {
 })
 export class ModelViewer implements OnInit, OnDestroy {
   @ViewChild('canvasContainer', { static: true }) canvasContainer!: ElementRef;
-  
+
   @Input() backgroundColor: string = '#e8e8e8';
   @Input() enableControls: boolean = true;
   @Input() autoRotate: boolean = false;
   @Input() showGrid: boolean = false;
   @Input() showAxes: boolean = false;
-  
+
   @Output() modelLoaded = new EventEmitter<any>();
   @Output() modelError = new EventEmitter<string>();
 
@@ -45,12 +45,12 @@ export class ModelViewer implements OnInit, OnDestroy {
   private rafId: number = 0;
   private gltfLoader!: GLTFLoader;
   private dracoLoader!: DRACOLoader;
-  
+
   public isLoading: boolean = false;
   public loadingProgress: number = 0;
   public errorMessage: string = '';
   public modelInfo: any = null;
-  
+
   public showMaterialEditor: boolean = false;
   public selectedColor: string = '#ff3333';
   public selectedTexture: string = 'metallic_paint';
@@ -58,18 +58,18 @@ export class ModelViewer implements OnInit, OnDestroy {
   public materialMetalness: number = 0.95;
   public materialEmissive: string = '#000000';
   public emissiveIntensity: number = 0;
-  
+
   public smartColorMode: boolean = true;
   public availableMaterials: MaterialInfo[] = [];
   public selectedMaterials: MaterialInfo[] = [];
-  
+
   private originalMaterials: Map<THREE.Mesh, THREE.Material[]> = new Map();
-  
+
   public colorPalette: string[] = [
     '#ff3333', '#3333ff', '#33ff33', '#ffff33', '#ff33ff', '#33ffff',
     '#ff6633', '#ffffff', '#000000', '#c0c0c0', '#ffd700', '#8b4513'
   ];
-  
+
   public carTextures = [
     { id: 'metallic_paint', name: '🎨 Metallic Paint', type: 'procedural' },
     { id: 'pearl_paint', name: '✨ Pearl Paint', type: 'procedural' },
@@ -82,14 +82,14 @@ export class ModelViewer implements OnInit, OnDestroy {
   // Backend colors
   public backendColors: any[] = [];
 
-  constructor(private cdr: ChangeDetectorRef, private ngZone: NgZone) {}
+  constructor(private cdr: ChangeDetectorRef, private ngZone: NgZone) { }
 
   ngOnInit(): void {
     this.initThree();
     this.initLoaders();
     this.setupReducedBrightLighting();
     this.animate();
-    
+
     window.addEventListener('resize', () => this.handleResize());
     setTimeout(() => this.handleResize(), 100);
   }
@@ -103,12 +103,12 @@ export class ModelViewer implements OnInit, OnDestroy {
 
   private handleResize(): void {
     if (!this.canvasContainer?.nativeElement || !this.renderer || !this.camera) return;
-    
+
     const width = this.canvasContainer.nativeElement.clientWidth;
     const height = this.canvasContainer.nativeElement.clientHeight;
-    
+
     if (width === 0 || height === 0) return;
-    
+
     this.renderer.setSize(width, height);
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
@@ -120,7 +120,7 @@ export class ModelViewer implements OnInit, OnDestroy {
 
     const width = this.canvasContainer.nativeElement.clientWidth || window.innerWidth;
     const height = this.canvasContainer.nativeElement.clientHeight || window.innerHeight;
-    
+
     this.camera = new THREE.PerspectiveCamera(20, width / height, 0.1, 1000);
     this.camera.position.set(4, 2.5, 6);
     this.camera.lookAt(0, 0, 0);
@@ -151,11 +151,11 @@ export class ModelViewer implements OnInit, OnDestroy {
 
   private setupReducedBrightLighting(): void {
     // Reduced from 20+ lights to just 8 essential lights, but made them MUCH BRIGHTER
-    
+
     // ========== AMBIENT LIGHTS ==========
     const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
     this.scene.add(ambientLight);
-    
+
     const warmAmbient = new THREE.AmbientLight(0xffcc88, 0.8);
     this.scene.add(warmAmbient);
 
@@ -173,7 +173,7 @@ export class ModelViewer implements OnInit, OnDestroy {
     keyLightLeft.position.set(-3, 5, 5);
     keyLightLeft.castShadow = false;
     this.scene.add(keyLightLeft);
-    
+
     const backKeyLight = new THREE.DirectionalLight(0xffccaa, 2.0);
     backKeyLight.position.set(0, 5, -5);
     backKeyLight.castShadow = false;
@@ -184,7 +184,7 @@ export class ModelViewer implements OnInit, OnDestroy {
     fillRight.position.set(5, 3, 3);
     fillRight.castShadow = false;
     this.scene.add(fillRight);
-    
+
     const fillLeft = new THREE.DirectionalLight(0xffccaa, 1.5);
     fillLeft.position.set(-5, 3, 3);
     fillLeft.castShadow = false;
@@ -195,7 +195,7 @@ export class ModelViewer implements OnInit, OnDestroy {
     rimRight.position.set(3, 3, -5);
     rimRight.castShadow = false;
     this.scene.add(rimRight);
-    
+
     const rimLeft = new THREE.DirectionalLight(0x88aaff, 1.3);
     rimLeft.position.set(-3, 3, -5);
     rimLeft.castShadow = false;
@@ -206,7 +206,7 @@ export class ModelViewer implements OnInit, OnDestroy {
     gridHelper.position.y = -0.8;
     gridHelper.visible = this.showGrid;
     this.scene.add(gridHelper);
-    
+
     const axesHelper = new THREE.AxesHelper(3);
     axesHelper.visible = this.showAxes;
     this.scene.add(axesHelper);
@@ -241,11 +241,11 @@ export class ModelViewer implements OnInit, OnDestroy {
     this.availableMaterials = [];
     this.showMaterialEditor = false;
     this.cdr.detectChanges();
-    
+
     console.log('Starting to load model:', file.name);
     const fileExtension = file.name.split('.').pop()?.toLowerCase();
     const url = URL.createObjectURL(file);
-    
+
     if (fileExtension === 'gltf' || fileExtension === 'glb') {
       this.gltfLoader.load(url,
         (gltf) => {
@@ -255,7 +255,7 @@ export class ModelViewer implements OnInit, OnDestroy {
             this.saveOriginalMaterials();
             this.extractMaterials();
             this.autoDetectBodyMaterials();
-            
+
             this.modelInfo = {
               name: file.name,
               type: fileExtension.toUpperCase(),
@@ -323,7 +323,7 @@ export class ModelViewer implements OnInit, OnDestroy {
             this.saveOriginalMaterials();
             this.extractMaterials();
             this.autoDetectBodyMaterials();
-            
+
             this.modelInfo = {
               name: file.name,
               type: fileExtension.toUpperCase(),
@@ -375,10 +375,10 @@ export class ModelViewer implements OnInit, OnDestroy {
             this.saveOriginalMaterials();
             this.extractMaterials();
             this.autoDetectBodyMaterials();
-            
+
             const positionAttribute = geometry.attributes['position'];
             const vertexCount = positionAttribute ? positionAttribute.count : 0;
-            
+
             this.modelInfo = {
               name: file.name,
               type: fileExtension.toUpperCase(),
@@ -424,26 +424,26 @@ export class ModelViewer implements OnInit, OnDestroy {
     if (this.currentModel) {
       this.scene.remove(this.currentModel);
     }
-    
+
     this.currentModel = model;
-    
+
     const box = new THREE.Box3().setFromObject(model);
     const center = box.getCenter(new THREE.Vector3());
     const size = box.getSize(new THREE.Vector3());
-    
+
     model.position.sub(center);
     model.position.y = -center.y + (size.y / 2);
-    
+
     const maxDim = Math.max(size.x, size.y, size.z);
     const targetSize = 2.0;
     const scale = targetSize / maxDim;
     model.scale.set(scale, scale, scale);
-    
+
     model.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         child.castShadow = true;
         child.receiveShadow = true;
-        
+
         if (child.material) {
           const materials = Array.isArray(child.material) ? child.material : [child.material];
           materials.forEach((material: any) => {
@@ -456,10 +456,10 @@ export class ModelViewer implements OnInit, OnDestroy {
         }
       }
     });
-    
+
     this.scene.add(model);
     this.updateGridAndAxes();
-    
+
     setTimeout(() => {
       this.handleResize();
       this.resetCameraToFit();
@@ -492,9 +492,9 @@ export class ModelViewer implements OnInit, OnDestroy {
 
   private extractMaterials(): void {
     if (!this.currentModel) return;
-    
+
     const materialMap = new Map<string, MaterialInfo>();
-    
+
     this.currentModel.traverse((child) => {
       if (child instanceof THREE.Mesh && child.material) {
         const materials = Array.isArray(child.material) ? child.material : [child.material];
@@ -502,7 +502,7 @@ export class ModelViewer implements OnInit, OnDestroy {
           if (material.isMeshStandardMaterial && !materialMap.has(material.uuid)) {
             const materialName = material.name || this.generateMaterialName(material);
             const isBodyCandidate = this.isLikelyBodyMaterial(material, child);
-            
+
             materialMap.set(material.uuid, {
               id: material.uuid,
               name: materialName,
@@ -519,7 +519,7 @@ export class ModelViewer implements OnInit, OnDestroy {
         });
       }
     });
-    
+
     this.availableMaterials = Array.from(materialMap.values());
     this.updateSelectedMaterials();
     console.log('Extracted materials:', this.availableMaterials.length);
@@ -538,18 +538,18 @@ export class ModelViewer implements OnInit, OnDestroy {
     const materialName = (material.name || '').toLowerCase();
     const meshName = (mesh.name || '').toLowerCase();
     const brightness = (material.color.r + material.color.g + material.color.b) / 3;
-    
+
     const bodyKeywords = ['body', 'paint', 'car', 'coat', 'kuzov', 'chassis', 'hood', 'roof', 'door', 'fender'];
     const nonBodyKeywords = ['glass', 'window', 'tire', 'wheel', 'rubber', 'chrome', 'light', 'lamp', 'emblem', 'mirror'];
-    
+
     for (const kw of bodyKeywords) if (materialName.includes(kw)) return true;
     for (const kw of nonBodyKeywords) if (materialName.includes(kw)) return false;
     for (const kw of bodyKeywords) if (meshName.includes(kw)) return true;
     for (const kw of nonBodyKeywords) if (meshName.includes(kw)) return false;
-    
+
     const boundingSphere = mesh.geometry.boundingSphere;
     const radius = boundingSphere ? boundingSphere.radius : 0;
-    
+
     return material.metalness > 0.5 && brightness > 0.3 && radius > 0.3;
   }
 
@@ -565,7 +565,7 @@ export class ModelViewer implements OnInit, OnDestroy {
   public smartColorChange(color: string): void {
     this.selectedColor = color;
     const colorHex = parseInt(color.substring(1), 16);
-    
+
     if (this.smartColorMode) {
       this.selectedMaterials.forEach(materialInfo => {
         materialInfo.material.color.setHex(colorHex);
@@ -609,7 +609,7 @@ export class ModelViewer implements OnInit, OnDestroy {
 
   public applyMaterialPreset(preset: string): void {
     if (!this.currentModel) return;
-    switch(preset) {
+    switch (preset) {
       case 'metallic_paint': this.materialMetalness = 0.95; this.materialRoughness = 0.25; break;
       case 'pearl_paint': this.materialMetalness = 0.85; this.materialRoughness = 0.2; break;
       case 'matte_paint': this.materialMetalness = 0.2; this.materialRoughness = 0.8; break;
@@ -682,9 +682,9 @@ export class ModelViewer implements OnInit, OnDestroy {
           }
         }
       });
-      
-      setTimeout(() => { 
-        this.extractMaterials(); 
+
+      setTimeout(() => {
+        this.extractMaterials();
         this.autoDetectBodyMaterials();
         if (this.selectedMaterials.length > 0) {
           this.selectedColor = this.selectedMaterials[0].color;
@@ -714,7 +714,7 @@ export class ModelViewer implements OnInit, OnDestroy {
       const size = box.getSize(new THREE.Vector3());
       const maxDim = Math.max(size.x, size.y, size.z);
       const distance = maxDim * 2.2;
-      
+
       this.camera.position.set(distance * 0.8, distance * 0.6, distance);
       this.controls.target.copy(center);
       this.controls.update();
@@ -746,8 +746,8 @@ export class ModelViewer implements OnInit, OnDestroy {
   }
 
   public resetCamera(): void { this.resetCameraToFit(); }
-  
-  public setAutoRotate(enabled: boolean): void { 
+
+  public setAutoRotate(enabled: boolean): void {
     if (this.controls) {
       this.controls.autoRotate = enabled;
     }
@@ -758,23 +758,23 @@ export class ModelViewer implements OnInit, OnDestroy {
     materials.forEach(m => m.material.wireframe = !m.material.wireframe);
   }
 
-  public toggleMaterialEditor(): void { 
+  public toggleMaterialEditor(): void {
     this.showMaterialEditor = !this.showMaterialEditor;
     if (this.showMaterialEditor) {
       this.handleResize();
     }
   }
-  
-  public toggleSmartMode(): void { 
-    this.smartColorMode = !this.smartColorMode; 
-    if (this.smartColorMode) this.selectBodyMaterialsOnly(); 
+
+  public toggleSmartMode(): void {
+    this.smartColorMode = !this.smartColorMode;
+    if (this.smartColorMode) this.selectBodyMaterialsOnly();
   }
-  
+
   public setShowGrid(show: boolean): void {
     this.showGrid = show;
     this.updateGridAndAxes();
   }
-  
+
   public setShowAxes(show: boolean): void {
     this.showAxes = show;
     this.updateGridAndAxes();
@@ -793,14 +793,89 @@ export class ModelViewer implements OnInit, OnDestroy {
       type: color.type || 'standard',
       isBackend: true
     }));
-    
+
     const defaultColors = this.colorPalette.map(colorCode => ({
       name: 'Custom Color',
       colorCode: colorCode,
       type: 'custom',
       isBackend: false
     }));
-    
+
     return [...backendColorItems, ...defaultColors];
+  }
+
+  // Load model from a URL string (for backend integration)
+  public loadModelFromUrl(url: string): void {
+    this.isLoading = true;
+    this.loadingProgress = 0;
+    this.errorMessage = '';
+    this.modelInfo = null;
+    this.originalMaterials.clear();
+    this.availableMaterials = [];
+    this.showMaterialEditor = false;
+    this.cdr.detectChanges();
+
+    console.log('Loading model from URL:', url);
+
+    fetch(url)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Failed to load model: ${response.status} ${response.statusText}`);
+        }
+        return response.blob();
+      })
+      .then(blob => {
+        const fileName = url.split('/').pop() || 'model.glb';
+        const file = new File([blob], fileName, {
+          type: blob.type || 'application/octet-stream'
+        });
+
+        // Load the model using the existing loadModel method
+        this.loadModel(file);
+      })
+      .catch(error => {
+        console.error('Error loading model from URL:', error);
+        this.errorMessage = error.message || 'Failed to load model from URL';
+        this.modelError.emit(this.errorMessage);
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      });
+  }
+
+
+  //Load model from backend by product ID
+  public loadModelFromBackend(productId: string): void {
+    const apiUrl = 'http://localhost:8080';
+
+    // First get the product to get the modelpath
+    fetch(`${apiUrl}/product/id?id=${productId}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Failed to get product: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then((res: any) => {
+        const carData = res.data;
+
+        if (carData && carData.modelpath) {
+          const filename = carData.modelpath.split('/').pop();
+          if (filename) {
+            const modelUrl = `${apiUrl}/api/models/cars/${filename}`;
+            this.loadModelFromUrl(modelUrl);
+          } else {
+            throw new Error('Invalid model path');
+          }
+        } else {
+          throw new Error('No model available for this car');
+        }
+      })
+      .catch(error => {
+        console.error('Error loading model from backend:', error);
+        this.errorMessage = error.message || 'Failed to load model from backend';
+        this.modelError.emit(this.errorMessage);
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      });
   }
 }

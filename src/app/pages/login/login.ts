@@ -4,6 +4,7 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import swal from 'sweetalert2';
+import { switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-login',
@@ -12,37 +13,55 @@ import swal from 'sweetalert2';
   templateUrl: './login.html',
   styleUrl: './login.css',
 })
+
 export class Login {
-  public user:any ={
+  public user: any = {
     email: "",
     password: ""
   }
-  constructor(private http:HttpClient, private router:Router){}
 
-  login(){
-    this.http.post("http://localhost:8080/user/login",this.user).subscribe({
-      next: (response: any)=>{
-        this.showMessage(response.message);
-        localStorage.setItem("email",this.user.email);
-        this.router.navigate(["/dashboard"]);
-      },
-      error: (err)=>{
-        this.showError(err.error.message);
-      }
-    })
+  constructor(private http: HttpClient, private router: Router) { }
+
+  login() {
+    this.http.post("http://localhost:8080/user/login", this.user)
+      .pipe(
+        switchMap((response: any) => {
+          this.showMessage(response.message);
+          localStorage.setItem("email", this.user.email);
+          return this.http.get(`http://localhost:8080/user/email?email=${this.user.email}`);
+        })
+      )
+      .subscribe({
+        next: (data: any) => {
+          const role = data.data.role.replace(/\s/g, '').trim();
+          if (role === "buyer") {
+            this.router.navigate(["/buyer-dashboard"]);
+          } else if (role === "seller") {
+            this.router.navigate(["/seller-dashboard"]);
+          } else {
+            this.router.navigate(["/both-dashboard"]);
+          }
+        },
+        error: (err) => {
+          console.error("Error:", err);
+          this.showError(err.error?.message || "Login failed");
+        }
+      });
   }
-    private showMessage(message: string) {
-      swal.fire({
-        title: message,
-        icon: 'success',
-        confirmButtonText: 'OK'
-      });
-    }
-    private showError(message: string) {
-      swal.fire({
-        title: message,
-        icon: 'error',
-        confirmButtonText: 'OK'
-      });
-    }
+
+  private showMessage(message: string) {
+    swal.fire({
+      title: message,
+      icon: 'success',
+      confirmButtonText: 'OK'
+    });
+  }
+
+  private showError(message: string) {
+    swal.fire({
+      title: message,
+      icon: 'error',
+      confirmButtonText: 'OK'
+    });
+  }
 }

@@ -51,18 +51,6 @@
       </div>
     </div>
     
-    <div class="editor-section">
-      <label>🚗 Special Finishes</label>
-      <div class="texture-grid">
-        <button *ngFor="let texture of carTextures" 
-                class="texture-btn"
-                [class.active]="selectedTexture === texture.id"
-                (click)="applyTexturePreset(texture.id)">
-          {{ texture.name }}
-        </button>
-      </div>
-    </div>
-    
     <div class="editor-actions">
       <button class="action-btn reset" (click)="resetToOriginalMaterials()">
         🔄 Reset to Original Colors
