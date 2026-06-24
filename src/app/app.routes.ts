@@ -12,6 +12,7 @@ import { Seller } from './pages/seller/seller';
 import { Addproduct } from './pages/addproduct/addproduct';
 import { Addpart } from './pages/addpart/addpart';
 import { PartDetails } from './pages/part-details/part-details';
+import { Cart } from './pages/cart/cart';
 
 export const routes: Routes = [
     {
@@ -61,6 +62,10 @@ export const routes: Routes = [
     {
         path: "add-part",
         component: Addpart
+    },
+    {
+        path: "cart",
+        component: Cart
     },
     
 ];
