@@ -18,16 +18,27 @@
     </div>
     
     <!-- Backend Colors Section -->
-    <div class="editor-section" *ngIf="backendColors.length > 0">
-      <label>🎯 Available Colors</label>
+    <div class="editor-section" *ngIf="backendColors && backendColors.length > 0">
+      <label>🎯 Available Colors ({{ backendColors.length }})</label>
       <div class="color-palette">
         <div *ngFor="let color of backendColors" 
              class="color-swatch" 
              [style.backgroundColor]="color.colorCode"
              [class.active]="selectedColor === color.colorCode"
              (click)="applyColorPreset(color.colorCode)"
-             [title]="color.name">
+             [title]="color.name + ' (' + color.colorCode + ')'">
         </div>
+      </div>
+      <div style="margin-top: 6px; font-size: 10px; color: #94a3b8; text-align: center;">
+        Click a color to apply it to your car
+      </div>
+    </div>
+    
+    <!-- Show message when no colors are available -->
+    <div class="editor-section" *ngIf="!backendColors || backendColors.length === 0">
+      <label>🎯 Available Colors</label>
+      <div style="padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px; text-align: center; color: #94a3b8; font-size: 12px;">
+        No colors available for this car
       </div>
     </div>
     

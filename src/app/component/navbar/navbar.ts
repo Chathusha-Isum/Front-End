@@ -17,6 +17,7 @@ export class Navbar implements OnInit, OnDestroy {
   userEmail: string = '';
   showDropdown: boolean = false;
   mobileMenuOpen: boolean = false;
+  activeRoute: string = '/';
   private apiUrl = 'http://localhost:8080';
   private storageListener: any;
 
@@ -28,15 +29,18 @@ export class Navbar implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.checkLoginStatus();
+    this.setActiveRoute();
     
-    // Listen for route changes
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe(() => {
       this.checkLoginStatus();
+      this.setActiveRoute();
+      // Close mobile menu on navigation
+      this.mobileMenuOpen = false;
+      this.cdr.detectChanges();
     });
 
-    // Listen for storage changes (for multi-tab support)
     this.storageListener = (event: StorageEvent) => {
       if (event.key === 'email') {
         this.checkLoginStatus();
@@ -58,6 +62,7 @@ export class Navbar implements OnInit, OnDestroy {
     if (!target.closest('.dropdown-container')) {
       this.showDropdown = false;
     }
+    // Don't close mobile menu on outside click - let user control it
   }
 
   checkLoginStatus(): void {
@@ -75,6 +80,17 @@ export class Navbar implements OnInit, OnDestroy {
       this.userEmail = '';
       this.cdr.detectChanges();
     }
+  }
+
+  setActiveRoute(): void {
+    this.activeRoute = this.router.url;
+  }
+
+  isActive(route: string): boolean {
+    if (route === '/') {
+      return this.activeRoute === '/';
+    }
+    return this.activeRoute.startsWith(route);
   }
 
   fetchUserData(): void {
@@ -103,6 +119,10 @@ export class Navbar implements OnInit, OnDestroy {
 
   toggleMobileMenu(): void {
     this.mobileMenuOpen = !this.mobileMenuOpen;
+    // Close dropdown when mobile menu opens
+    if (this.mobileMenuOpen) {
+      this.showDropdown = false;
+    }
   }
 
   closeMobileMenu(): void {

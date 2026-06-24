@@ -38,16 +38,12 @@ export class Upload implements OnInit, AfterViewInit {
   // API configuration
   private apiUrl = 'http://localhost:8080';
   
-  // Colors from backend
   backendColors: ModelColor[] = [];
   isLoadingColors: boolean = false;
   
   constructor(private cdr: ChangeDetectorRef, private http: HttpClient) {}
   
   ngOnInit(): void {
-    // console.log('Upload ngOnInit');
-    
-    // Get car ID from localStorage
     this.carId = localStorage.getItem('car') || '';
     
     if (!this.carId) {
@@ -57,38 +53,24 @@ export class Upload implements OnInit, AfterViewInit {
       return;
     }
     
-    // console.log('Car ID from localStorage:', this.carId);
-    
-    // Fetch car details from backend
     this.fetchCarDetails(this.carId);
   }
   
-  ngAfterViewInit(): void {
-    // console.log('Upload ngAfterViewInit - ModelViewer:', this.modelViewer);
-  }
+  ngAfterViewInit(): void {}
   
-  // ==================== FETCH CAR DETAILS ====================
-  
-  /**
-   * Fetch car details from backend using car ID
-   */
+ 
   fetchCarDetails(carId: string): void {
     this.isLoading = true;
     this.errorMessage = '';
-    
-    // console.log('Fetching car details for ID:', carId);
     
     this.http.get(`${this.apiUrl}/product/id?id=${carId}`).subscribe({
       next: (res: any) => {
         this.isLoading = false;
         this.carData = res.data;
         
-        // console.log('Car data received:', this.carData);
-        
         // Check if car has a model path
         if (this.carData && this.carData.modelpath) {
           this.modelPath = this.carData.modelpath;
-          // Example: '/cars/1234567890-car.glb'
           
           // Extract filename from path
           const filename = this.modelPath.split('/').pop();
@@ -96,14 +78,13 @@ export class Upload implements OnInit, AfterViewInit {
           if (filename) {
             // Build the full URL to access the model
             this.modelUrl = `${this.apiUrl}/api/models/cars/${filename}`;
-            // console.log('Model URL:', this.modelUrl);
             
             // Load the model after a short delay to ensure viewer is ready
             setTimeout(() => {
               this.loadModelFromUrl(this.modelUrl);
             }, 500);
             
-            // Also load colors if available from the model endpoint
+            // Also load colors if available
             this.loadColorsFromBackend(carId);
           } else {
             this.errorMessage = 'Invalid model path format';
@@ -147,8 +128,6 @@ export class Upload implements OnInit, AfterViewInit {
     this.isLoading = true;
     this.errorMessage = '';
     
-    // console.log('Loading model from URL:', url);
-    
     fetch(url)
       .then(response => {
         if (!response.ok) {
@@ -173,7 +152,6 @@ export class Upload implements OnInit, AfterViewInit {
         // Load model into viewer
         if (this.modelViewer) {
           this.modelViewer.loadModel(file);
-          // console.log('Model loaded successfully');
         }
         
         this.isLoading = false;
@@ -199,35 +177,80 @@ export class Upload implements OnInit, AfterViewInit {
   
   /**
    * Load available colors from backend
+   * The color attribute in database stores hex codes separated by commas
+   * Example: "#FFFFFF,#C0C0C0,#2D2D2D,#1A3A5C,#8B0000"
    */
   loadColorsFromBackend(carId: string): void {
     this.isLoadingColors = true;
     
-    this.http.get(`${this.apiUrl}/product/model`, {
-      params: { id: carId.toString() }
-    }).subscribe({
+    this.http.get(`${this.apiUrl}/product/getcolor?id=${carId}`).subscribe({
       next: (response: any) => {
-        if (response && response.colors && Array.isArray(response.colors)) {
-          this.backendColors = response.colors.map((color: any) => ({
-            id: color.id,
-            name: color.name,
-            colorCode: color.colorCode || color.code,
+        
+        // Check if response is a string (comma-separated hex codes)
+        if (typeof response.data.color === 'string') {
+          // Split by comma and trim whitespace
+          const colorHexCodes = response.data.color.split(',').map((c: string) => c.trim()).filter((c: string) => c.length > 0);
+          
+          if (colorHexCodes.length > 0) {
+            this.backendColors = colorHexCodes.map((hex: string, index: number) => ({
+              id: index + 1,
+              name: `Color ${index + 1}`,
+              colorCode: hex.startsWith('#') ? hex : `#${hex}`,
+              type: 'standard'
+            }));
+            
+            // Pass colors to model viewer if available
+            if (this.modelViewer) {
+              this.modelViewer.setBackendColors(this.backendColors);
+            }
+            
+          } else {
+            console.log('No colors found for this car');
+          }
+        } 
+        // If response has a colors array property
+        else if (response && response.colors && Array.isArray(response.colors)) {
+          this.backendColors = response.colors.map((color: any, index: number) => ({
+            id: color.id || index + 1,
+            name: color.name || `Color ${index + 1}`,
+            colorCode: color.colorCode || '#ffffff',
             type: color.type || 'standard'
           }));
           
-          // Pass colors to model viewer if available
           if (this.modelViewer) {
-            (this.modelViewer as any).setBackendColors(this.backendColors);
+            this.modelViewer.setBackendColors(this.backendColors);
           }
-          
-          // console.log('Colors loaded:', this.backendColors);
+          console.log('Colors loaded from database:', this.backendColors);
         }
+        // If response has a data property
+        else if (response && response.data) {
+          const colorData = response.data;
+          if (typeof colorData === 'string') {
+            const colorHexCodes = colorData.split(',').map((c: string) => c.trim()).filter((c: string) => c.length > 0);
+            
+            if (colorHexCodes.length > 0) {
+              this.backendColors = colorHexCodes.map((hex: string, index: number) => ({
+                id: index + 1,
+                name: `Color ${index + 1}`,
+                colorCode: hex.startsWith('#') ? hex : `#${hex}`,
+                type: 'standard'
+              }));
+              
+              if (this.modelViewer) {
+                this.modelViewer.setBackendColors(this.backendColors);
+              }
+              console.log('Colors loaded from database:', this.backendColors);
+            }
+          }
+        }
+        
         this.isLoadingColors = false;
         this.cdr.detectChanges();
       },
       error: (error) => {
         console.error('Error loading colors:', error);
         this.isLoadingColors = false;
+        this.cdr.detectChanges();
       }
     });
   }

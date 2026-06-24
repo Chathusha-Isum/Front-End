@@ -28,7 +28,7 @@ interface MaterialInfo {
 export class ModelViewer implements OnInit, OnDestroy {
   @ViewChild('canvasContainer', { static: true }) canvasContainer!: ElementRef;
 
-  @Input() backgroundColor: string = '#e8e8e8';
+  @Input() backgroundColor: string = '#111122';
   @Input() enableControls: boolean = true;
   @Input() autoRotate: boolean = false;
   @Input() showGrid: boolean = false;
@@ -79,7 +79,7 @@ export class ModelViewer implements OnInit, OnDestroy {
     { id: 'racing_stripe', name: '🏁 Racing Stripe', type: 'pattern' }
   ];
 
-  // Backend colors
+  // Backend colors from database
   public backendColors: any[] = [];
 
   constructor(private cdr: ChangeDetectorRef, private ngZone: NgZone) { }
@@ -125,7 +125,6 @@ export class ModelViewer implements OnInit, OnDestroy {
     this.camera.position.set(4, 2.5, 6);
     this.camera.lookAt(0, 0, 0);
 
-    // ORIGINAL RENDERER SETTINGS - Keep texture quality
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
     this.renderer.setSize(width, height);
     this.renderer.shadowMap.enabled = true;
@@ -150,16 +149,14 @@ export class ModelViewer implements OnInit, OnDestroy {
   }
 
   private setupReducedBrightLighting(): void {
-    // Reduced from 20+ lights to just 8 essential lights, but made them MUCH BRIGHTER
-
-    // ========== AMBIENT LIGHTS ==========
+    // Ambient Lights
     const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
     this.scene.add(ambientLight);
 
     const warmAmbient = new THREE.AmbientLight(0xffcc88, 0.8);
     this.scene.add(warmAmbient);
 
-    // ========== DIRECTIONAL LIGHTS (Key Lights) ==========
+    // Directional Lights (Key Lights)
     const keyLight = new THREE.DirectionalLight(0xfff5e6, 3.0);
     keyLight.position.set(4, 6, 5);
     keyLight.castShadow = true;
@@ -179,7 +176,7 @@ export class ModelViewer implements OnInit, OnDestroy {
     backKeyLight.castShadow = false;
     this.scene.add(backKeyLight);
 
-    // ========== FILL LIGHTS ==========
+    // Fill Lights
     const fillRight = new THREE.DirectionalLight(0xaaccff, 1.5);
     fillRight.position.set(5, 3, 3);
     fillRight.castShadow = false;
@@ -190,7 +187,7 @@ export class ModelViewer implements OnInit, OnDestroy {
     fillLeft.castShadow = false;
     this.scene.add(fillLeft);
 
-    // ========== RIM LIGHTS ==========
+    // Rim Lights
     const rimRight = new THREE.DirectionalLight(0xffaa77, 1.5);
     rimRight.position.set(3, 3, -5);
     rimRight.castShadow = false;
@@ -210,8 +207,6 @@ export class ModelViewer implements OnInit, OnDestroy {
     const axesHelper = new THREE.AxesHelper(3);
     axesHelper.visible = this.showAxes;
     this.scene.add(axesHelper);
-
-    // console.log('💡 Reduced lighting setup (8 lights) with significantly increased brightness - textures preserved');
   }
 
   private initLoaders(): void {
@@ -242,7 +237,6 @@ export class ModelViewer implements OnInit, OnDestroy {
     this.showMaterialEditor = false;
     this.cdr.detectChanges();
 
-    // console.log('Starting to load model:', file.name);
     const fileExtension = file.name.split('.').pop()?.toLowerCase();
     const url = URL.createObjectURL(file);
 
@@ -250,7 +244,6 @@ export class ModelViewer implements OnInit, OnDestroy {
       this.gltfLoader.load(url,
         (gltf) => {
           this.ngZone.run(() => {
-            // console.log('GLTF loaded successfully');
             this.displayModel(gltf.scene);
             this.saveOriginalMaterials();
             this.extractMaterials();
@@ -295,7 +288,6 @@ export class ModelViewer implements OnInit, OnDestroy {
       objLoader.load(url,
         (obj) => {
           this.ngZone.run(() => {
-            // console.log('OBJ loaded successfully');
             obj.traverse((child) => {
               if (child instanceof THREE.Mesh) {
                 if (child.material) {
@@ -363,7 +355,6 @@ export class ModelViewer implements OnInit, OnDestroy {
       stlLoader.load(url,
         (geometry) => {
           this.ngZone.run(() => {
-            // console.log('STL loaded successfully');
             const material = new THREE.MeshStandardMaterial({
               color: 0xcccccc,
               roughness: 0.4,
@@ -522,7 +513,6 @@ export class ModelViewer implements OnInit, OnDestroy {
 
     this.availableMaterials = Array.from(materialMap.values());
     this.updateSelectedMaterials();
-    // console.log('Extracted materials:', this.availableMaterials.length);
   }
 
   private generateMaterialName(material: THREE.MeshStandardMaterial): string {
@@ -604,8 +594,14 @@ export class ModelViewer implements OnInit, OnDestroy {
     });
   }
 
-  public applyColorPreset(color: string): void { this.smartColorChange(color); }
-  public applyTexturePreset(textureId: string): void { this.selectedTexture = textureId; this.applyMaterialPreset(textureId); }
+  public applyColorPreset(color: string): void {
+    this.smartColorChange(color);
+  }
+
+  public applyTexturePreset(textureId: string): void {
+    this.selectedTexture = textureId;
+    this.applyMaterialPreset(textureId);
+  }
 
   public applyMaterialPreset(preset: string): void {
     if (!this.currentModel) return;
@@ -663,8 +659,15 @@ export class ModelViewer implements OnInit, OnDestroy {
     applyTo.forEach(m => { m.material.map = texture; m.material.color.setHex(0xff0000); m.material.needsUpdate = true; });
   }
 
-  public selectAllMaterials(): void { this.availableMaterials.forEach(m => m.selected = true); this.updateSelectedMaterials(); }
-  public selectBodyMaterialsOnly(): void { this.availableMaterials.forEach(m => m.selected = m.isBodyCandidate); this.updateSelectedMaterials(); }
+  public selectAllMaterials(): void {
+    this.availableMaterials.forEach(m => m.selected = true);
+    this.updateSelectedMaterials();
+  }
+
+  public selectBodyMaterialsOnly(): void {
+    this.availableMaterials.forEach(m => m.selected = m.isBodyCandidate);
+    this.updateSelectedMaterials();
+  }
 
   public resetToOriginalMaterials(): void {
     if (this.currentModel) {
@@ -745,7 +748,9 @@ export class ModelViewer implements OnInit, OnDestroy {
     return count;
   }
 
-  public resetCamera(): void { this.resetCameraToFit(); }
+  public resetCamera(): void {
+    this.resetCameraToFit();
+  }
 
   public setAutoRotate(enabled: boolean): void {
     if (this.controls) {
@@ -780,16 +785,32 @@ export class ModelViewer implements OnInit, OnDestroy {
     this.updateGridAndAxes();
   }
 
+  /**
+   * Set backend colors from database
+   * Colors are passed as an array of { name, colorCode, type }
+   */
   public setBackendColors(colors: any[]): void {
-    this.backendColors = colors;
-    // console.log('Received backend colors in ModelViewer:', this.backendColors);
+
+    // Ensure each color has the required properties
+    this.backendColors = colors.map(color => ({
+      id: color.id || 0,
+      name: color.name || 'Color',
+      colorCode: color.colorCode || color.code || '#ffffff',
+      type: color.type || 'standard'
+    }));
+
+
+    // Force change detection
     this.cdr.detectChanges();
   }
 
+  /**
+   * Get full color palette combining backend colors and default colors
+   */
   public getFullColorPalette(): any[] {
     const backendColorItems = this.backendColors.map(color => ({
-      name: color.name,
-      colorCode: color.colorCode,
+      name: color.name || 'Color',
+      colorCode: color.colorCode || '#ffffff',
       type: color.type || 'standard',
       isBackend: true
     }));
@@ -804,7 +825,9 @@ export class ModelViewer implements OnInit, OnDestroy {
     return [...backendColorItems, ...defaultColors];
   }
 
-  // Load model from a URL string (for backend integration)
+  /**
+   * Load model from a URL string (for backend integration)
+   */
   public loadModelFromUrl(url: string): void {
     this.isLoading = true;
     this.loadingProgress = 0;
@@ -814,8 +837,6 @@ export class ModelViewer implements OnInit, OnDestroy {
     this.availableMaterials = [];
     this.showMaterialEditor = false;
     this.cdr.detectChanges();
-
-    // console.log('Loading model from URL:', url);
 
     fetch(url)
       .then(response => {
@@ -842,8 +863,9 @@ export class ModelViewer implements OnInit, OnDestroy {
       });
   }
 
-
-  //Load model from backend by product ID
+  /**
+   * Load model from backend by product ID
+   */
   public loadModelFromBackend(productId: string): void {
     const apiUrl = 'http://localhost:8080';
 

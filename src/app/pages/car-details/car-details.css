@@ -1,0 +1,84 @@
+/* Responsive styles for car details page */
+
+/* Mobile first - single column */
+.grid {
+    display: grid;
+    gap: 1rem;
+}
+
+/* Center the 3D viewer on mobile */
+@media (max-width: 1023px) {
+    .grid {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .flex.justify-center {
+        display: flex;
+        justify-content: center;
+    }
+    
+    .max-w-\[500px\] {
+        max-width: 500px;
+        width: 100%;
+    }
+}
+
+/* Tablet and up */
+@media (min-width: 1024px) {
+    .grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+/* Ensure 3D viewer takes full width on desktop */
+@media (min-width: 1024px) {
+    .lg\:max-w-full {
+        max-width: 100%;
+    }
+}
+
+/* Loading animation */
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+/* Details summary styling */
+details summary::-webkit-details-marker {
+    display: none;
+}
+
+details summary {
+    list-style: none;
+    cursor: pointer;
+}
+
+/* Smooth transitions */
+.transition-all {
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 300ms;
+}
+
+/* Hover effects */
+.hover\:shadow-slate-950\/70:hover {
+    box-shadow: 0 20px 25px -5px rgba(2, 6, 23, 0.7), 0 8px 10px -6px rgba(2, 6, 23, 0.7);
+}
+
+/* Responsive padding */
+@media (max-width: 640px) {
+    .p-5 {
+        padding: 1rem;
+    }
+    
+    .text-2xl {
+        font-size: 1.25rem;
+    }
+    
+    .gap-2 {
+        gap: 0.5rem;
+    }
+}
