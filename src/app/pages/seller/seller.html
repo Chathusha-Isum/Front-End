@@ -8,9 +8,10 @@
 
             <div class="flex items-center gap-4 md:gap-5">
                 <div class="relative">
-                    <img src="https://ui-avatars.com/api/?name={{data.name}}&size=110&background=6d28d9&color=fff&bold=true&font-size=0.5"
-                        alt="{{data.name}} profile"
-                        class="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover ring-2 ring-indigo-400/50 shadow-xl shadow-indigo-900/20" />
+                    <img [src]="getProfilePic()"
+                        [alt]="data.name + ' profile'"
+                        class="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover ring-2 ring-purple-400/50 shadow-xl shadow-purple-900/20" />
+                    <span class="absolute -bottom-1 -right-1 bg-emerald-500 w-4 h-4 rounded-full border-2 border-[#141c2b]"></span>
                 </div>
                 <div class="md:hidden">
                     <h1 class="text-2xl font-bold tracking-tight text-white flex items-center gap-2">{{data.name}}</h1>
@@ -52,6 +53,7 @@
 
         <div class="px-5 py-6 md:px-7 md:py-7">
 
+            <!-- My Cars -->
             <div class="flex items-center justify-between border-b border-white/5 pb-4 mb-6">
                 <h2 class="text-xl font-semibold text-white flex items-center gap-2">
                     <i class="fas fa-car text-purple-300 text-lg"></i> My Cars
@@ -65,13 +67,15 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
                 <div *ngFor="let car of carlist; let i = index"
-                    class="glass-card rounded-2xl p-4 hover-lift transition-all duration-200 border border-white/5">
+                    class="glass-card rounded-2xl p-4 hover-lift transition-all duration-200 border border-white/5 cursor-pointer"
+                    (click)="viewCar(car.id)">
                     <div class="flex items-start justify-between">
                         <span
                             class="bg-purple-500/20 text-purple-200 text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider border border-purple-500/20">
                             Vehicle
                         </span>
-                        <button (click)="deleteCar(car.id)" class="text-slate-500 hover:text-red-400 transition-colors">
+                        <button (click)="$event.stopPropagation(); deleteCar(car.id)" 
+                                class="text-slate-500 hover:text-red-400 transition-colors">
                             <i class="fas fa-trash-alt"></i>
                         </button>
                     </div>
@@ -79,11 +83,12 @@
                     <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-300 mt-0.5">
                         <span><i class="fas fa-bolt text-purple-300 w-4"></i>{{car.category}}</span>
                         <span><i class="fas fa-calendar-alt text-purple-300 w-4"></i>{{car.productionyear}}</span>
+                        <span><i class="fas fa-tag text-purple-300 w-4"></i>{{car.brand}}</span>
                     </div>
                     <div class="flex items-center justify-between mt-3">
-                        <span class="text-amber-300 font-bold text-lg">LKR{{car.price}}</span>
+                        <span class="text-amber-300 font-bold text-lg">{{formatPrice(car.price)}}</span>
                         <span class="text-[10px] text-slate-400">
-                            <i class="fas fa-tag mr-1"></i>{{car.status || 'Available'}}
+                            <i class="fas fa-eye mr-1"></i> View
                         </span>
                     </div>
                 </div>
@@ -93,6 +98,7 @@
                 </div>
             </div>
 
+            <!-- My Parts -->
             <div
                 class="flex items-center justify-between border-b border-white/5 pb-4 mb-6 mt-8 pt-4 border-t border-white/5">
                 <h2 class="text-xl font-semibold text-white flex items-center gap-2">
@@ -121,11 +127,12 @@
                     <h3 class="text-white font-semibold text-base mt-3">{{part.name}}</h3>
                     <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-300 mt-0.5">
                         <span><i class="fas fa-car text-purple-300 w-4"></i>{{part.car}}</span>
+                        <span><i class="fas fa-clipboard-check text-purple-300 w-4"></i>{{part.condition || 'New'}}</span>
                     </div>
                     <div class="flex items-center justify-between mt-3">
-                        <span class="text-amber-300 font-bold text-lg">LKR{{part.price}}</span>
+                        <span class="text-amber-300 font-bold text-lg">{{formatPrice(part.price)}}</span>
                         <span class="text-[10px] text-slate-400">
-                            <i class="fas fa-box mr-1"></i>{{part.quantity || 1}} in stock
+                            <i class="fas fa-box mr-1"></i>{{part.qty || 1}} in stock
                         </span>
                     </div>
                 </div>
@@ -135,16 +142,16 @@
                 </div>
             </div>
 
+            <!-- Footer Stats -->
             <div
                 class="mt-8 pt-4 border-t border-white/5 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-400">
                 <div class="flex flex-wrap items-center gap-4">
-                    <span><i class="fas fa-car text-purple-300 mr-1.5"></i>{{data.car_count}} cars ·
-                        {{data.parts_count}} parts</span>
-                    <span><i class="fas fa-users text-purple-300 mr-1.5"></i>{{data.total_sales || 0}} total
-                        sales</span>
+                    <span><i class="fas fa-car text-purple-300 mr-1.5"></i>{{data.car_count}} cars</span>
+                    <span><i class="fas fa-cogs text-purple-300 mr-1.5"></i>{{data.parts_count}} parts</span>
+                    <span><i class="fas fa-users text-purple-300 mr-1.5"></i>{{data.total_sales || 0}} total sales</span>
                 </div>
                 <span class="bg-white/5 px-3 py-1 rounded-full">
-                    <i class="fas fa-dollar-sign mr-1.5 text-emerald-300"></i>revenue: LKR{{data.revenue || 0}}
+                    <i class="fas fa-dollar-sign mr-1.5 text-emerald-300"></i>revenue: {{formatPrice(data.revenue)}}
                 </span>
             </div>
         </div>

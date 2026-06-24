@@ -9,7 +9,6 @@
         <div class="relative h-full">
             <img src="img/register.jpeg"
                 alt="Desert landscape" class="w-full h-full object-cover">
-            <!-- Overlay -->
             <div class="absolute inset-0 bg-blue-900/30"></div>
             <div class="absolute bottom-12 left-12 text-white">
                 <h2 class="text-2xl md:text-4xl font-semibold mb-2">Where Quality</h2>
@@ -18,7 +17,7 @@
         </div>
     </div>
 
-    <!-- Right Section (Interactive / Functional Side) -->
+    <!-- Right Section -->
     <div class="w-full md:w-1/2 p-6 md:p-12 overflow-y-auto max-h-[90vh]">
         <div class="max-w-md mx-auto">
             <h1 class="text-white text-2xl md:text-4xl font-semibold mb-2">Create an account</h1>
@@ -41,29 +40,43 @@
                 <input type="tel" placeholder="Contact Number" [(ngModel)]="user.contact" name="contact"
                     class="w-full bg-[#1c1c24] text-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-600">
 
-                <!-- Address Field -->
                 <input type="text" placeholder="Street Address" [(ngModel)]="user.address" name="address"
                     class="w-full bg-[#1c1c24] text-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-600">
+                    
                 <input type="password" placeholder="Enter your password" [(ngModel)]="user.password" name="password"
                     class="w-full bg-[#1c1c24] text-white rounded-lg p-3 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-600">
 
                 <input type="password" placeholder="Confirm your password" [(ngModel)]="user.confirm_password" name="confirm_password"
                     class="w-full bg-[#1c1c24] text-white rounded-lg p-3 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-600">
 
+                <!-- Profile Picture Upload -->
+                <div class="space-y-2">
+                    <label class="text-gray-400 text-sm block">Profile Picture</label>
+                    <div class="flex items-center gap-4">
+                        <div class="relative">
+                            <input type="file" (change)="onProfilePicSelected($event)" accept="image/*"
+                                class="w-full bg-[#1c1c24] text-white rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700">
+                        </div>
+                        <div *ngIf="profilePicPreview" class="flex-shrink-0">
+                            <img [src]="profilePicPreview" alt="Profile Preview" class="w-14 h-14 rounded-full object-cover border-2 border-blue-500">
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Seller / Buyer Radio Buttons -->
                 <div class="space-y-3">
                     <label class="text-gray-400 text-sm block mb-2">I am a:</label>
                     <div class="flex gap-6">
                         <label class="flex items-center space-x-2 cursor-pointer">
-                            <input type="radio" name="userType" value="buyer" [(ngModel)]="user.role" name="role" class="rounded-full bg-[#1c1c24] border-gray-600 text-blue-600 focus:ring-blue-600" checked>
+                            <input type="radio" name="userType" value="buyer" [(ngModel)]="user.role" class="rounded-full bg-[#1c1c24] border-gray-600 text-blue-600 focus:ring-blue-600" checked>
                             <span class="text-white">Buyer</span>
                         </label>
                         <label class="flex items-center space-x-2 cursor-pointer">
-                            <input type="radio" name="userType" value="seller" [(ngModel)]="user.role" name="role" class="rounded-full bg-[#1c1c24] border-gray-600 text-blue-600 focus:ring-blue-600">
+                            <input type="radio" name="userType" value="seller" [(ngModel)]="user.role" class="rounded-full bg-[#1c1c24] border-gray-600 text-blue-600 focus:ring-blue-600">
                             <span class="text-white">Seller</span>
                         </label>
                         <label class="flex items-center space-x-2 cursor-pointer">
-                            <input type="radio" name="userType" value="both" [(ngModel)]="user.role" name="role" class="rounded-full bg-[#1c1c24] border-gray-600 text-blue-600 focus:ring-blue-600">
+                            <input type="radio" name="userType" value="both" [(ngModel)]="user.role" class="rounded-full bg-[#1c1c24] border-gray-600 text-blue-600 focus:ring-blue-600">
                             <span class="text-white">Both</span>
                         </label>
                     </div>

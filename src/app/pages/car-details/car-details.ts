@@ -22,8 +22,6 @@ export class CarDetails implements OnInit {
     this.id = localStorage.getItem("car");
     this.http.get(`http://localhost:8080/product/id?id=${this.id}`).subscribe((data: any) => {
       this.data = data.data;
-      console.log(this.data);
-
       this.cdr.detectChanges();
     });
   }

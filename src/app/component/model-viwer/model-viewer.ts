@@ -211,7 +211,7 @@ export class ModelViewer implements OnInit, OnDestroy {
     axesHelper.visible = this.showAxes;
     this.scene.add(axesHelper);
 
-    console.log('💡 Reduced lighting setup (8 lights) with significantly increased brightness - textures preserved');
+    // console.log('💡 Reduced lighting setup (8 lights) with significantly increased brightness - textures preserved');
   }
 
   private initLoaders(): void {
@@ -242,7 +242,7 @@ export class ModelViewer implements OnInit, OnDestroy {
     this.showMaterialEditor = false;
     this.cdr.detectChanges();
 
-    console.log('Starting to load model:', file.name);
+    // console.log('Starting to load model:', file.name);
     const fileExtension = file.name.split('.').pop()?.toLowerCase();
     const url = URL.createObjectURL(file);
 
@@ -250,7 +250,7 @@ export class ModelViewer implements OnInit, OnDestroy {
       this.gltfLoader.load(url,
         (gltf) => {
           this.ngZone.run(() => {
-            console.log('GLTF loaded successfully');
+            // console.log('GLTF loaded successfully');
             this.displayModel(gltf.scene);
             this.saveOriginalMaterials();
             this.extractMaterials();
@@ -295,7 +295,7 @@ export class ModelViewer implements OnInit, OnDestroy {
       objLoader.load(url,
         (obj) => {
           this.ngZone.run(() => {
-            console.log('OBJ loaded successfully');
+            // console.log('OBJ loaded successfully');
             obj.traverse((child) => {
               if (child instanceof THREE.Mesh) {
                 if (child.material) {
@@ -363,7 +363,7 @@ export class ModelViewer implements OnInit, OnDestroy {
       stlLoader.load(url,
         (geometry) => {
           this.ngZone.run(() => {
-            console.log('STL loaded successfully');
+            // console.log('STL loaded successfully');
             const material = new THREE.MeshStandardMaterial({
               color: 0xcccccc,
               roughness: 0.4,
@@ -522,7 +522,7 @@ export class ModelViewer implements OnInit, OnDestroy {
 
     this.availableMaterials = Array.from(materialMap.values());
     this.updateSelectedMaterials();
-    console.log('Extracted materials:', this.availableMaterials.length);
+    // console.log('Extracted materials:', this.availableMaterials.length);
   }
 
   private generateMaterialName(material: THREE.MeshStandardMaterial): string {
@@ -782,7 +782,7 @@ export class ModelViewer implements OnInit, OnDestroy {
 
   public setBackendColors(colors: any[]): void {
     this.backendColors = colors;
-    console.log('Received backend colors in ModelViewer:', this.backendColors);
+    // console.log('Received backend colors in ModelViewer:', this.backendColors);
     this.cdr.detectChanges();
   }
 
@@ -815,7 +815,7 @@ export class ModelViewer implements OnInit, OnDestroy {
     this.showMaterialEditor = false;
     this.cdr.detectChanges();
 
-    console.log('Loading model from URL:', url);
+    // console.log('Loading model from URL:', url);
 
     fetch(url)
       .then(response => {

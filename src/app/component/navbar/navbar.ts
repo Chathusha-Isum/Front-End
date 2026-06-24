@@ -85,7 +85,6 @@ export class Navbar implements OnInit, OnDestroy {
         this.userData = res.data;
         this.isLoggedIn = true;
         this.cdr.detectChanges();
-        console.log('User data loaded:', this.userData);
       },
       error: (err) => {
         console.error('Error fetching user data:', err);

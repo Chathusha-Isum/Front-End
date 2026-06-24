@@ -56,7 +56,7 @@ export class Hero implements AfterViewInit, OnDestroy {
           this.lightboxElement.classList.add('active');
         }
         
-        console.log(`Clicked: ${category}`);
+        // console.log(`Clicked: ${category}`);
       });
     });
   }
@@ -82,6 +82,6 @@ export class Hero implements AfterViewInit, OnDestroy {
   navigateToCategory(category: string): void {
     // Navigate to category page
     // this.router.navigate([`/category/${category.toLowerCase().replace(' ', '-')}`]);
-    console.log(`Navigate to: ${category}`);
+    // console.log(`Navigate to: ${category}`);
   }
 }

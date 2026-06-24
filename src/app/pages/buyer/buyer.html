@@ -11,8 +11,8 @@
             <!-- profile image + badge -->
             <div class="flex items-center gap-4 md:gap-5">
                 <div class="relative">
-                    <img src="https://ui-avatars.com/api/?name=Alex+Rivera&size=110&background=2b5f7a&color=fff&bold=true&font-size=0.5"
-                        alt="Alex Rivera profile"
+                    <img [src]="getProfilePic()"
+                        [alt]="data.name + ' profile'"
                         class="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover ring-2 ring-indigo-400/50 shadow-xl shadow-indigo-900/20" />
                 </div>
                 <div class="md:hidden">
@@ -30,7 +30,9 @@
             <div class="hidden md:flex md:flex-col md:flex-1">
                 <div class="flex items-center justify-between">
                     <h1 class="text-2xl md:text-3xl font-bold text-white tracking-tight">{{data.name}}</h1>
-
+                    <span class="bg-indigo-500/20 text-indigo-200 text-xs px-3 py-1 rounded-full border border-indigo-500/20">
+                        <i class="fas fa-shopping-bag mr-1"></i> Buyer
+                    </span>
                 </div>
                 <div class="flex flex-wrap items-center gap-x-5 gap-y-1.5 mt-1.5 text-sm text-slate-300">
                     <span><i class="far fa-envelope w-5 text-indigo-300"></i>{{data.email}}</span>
@@ -49,16 +51,16 @@
 
         <div class="px-5 py-6 md:px-7 md:py-7">
 
+            <!-- Purchased Vehicles -->
             <div class="flex items-center justify-between border-b border-white/5 pb-4 mb-6">
                 <h2 class="text-xl font-semibold text-white flex items-center gap-2">
-                    <i class="fas fa-shopping-bag text-indigo-300 text-lg"></i> Purchased Vehicles
+                    <i class="fas fa-car text-indigo-300 text-lg"></i> Purchased Vehicles
                     <span
                         class="ml-2 text-xs font-normal bg-indigo-500/20 text-indigo-200 px-2.5 py-0.5 rounded-full">{{data.product_count}}</span>
                 </h2>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
-
                 <div *ngFor="let car of carlist"
                     class="glass-card rounded-2xl p-4 hover-lift transition-all duration-200 border border-white/5">
                     <div class="flex items-start justify-between">
@@ -68,56 +70,67 @@
                     <h3 class="text-white font-semibold text-base mt-3">{{car.name}}</h3>
                     <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-300 mt-0.5">
                         <span><i class="fas fa-bolt text-indigo-300 w-4"></i>{{car.category}}</span>
+                        <span><i class="fas fa-calendar-alt text-indigo-300 w-4"></i>{{car.productionyear}}</span>
                     </div>
                     <div class="flex items-center justify-between mt-3">
-                        <span class="text-amber-300 font-bold text-lg">{{formatPrice(car.price) }}</span>
-                        <span class="text-[10px] text-slate-400"><i
-                                class="far fa-calendar-alt mr-1"></i>{{car.productionyear}}</span>
+                        <span class="text-amber-300 font-bold text-lg">{{formatPrice(car.price)}}</span>
+                        <span class="text-[10px] text-slate-400"><i class="fas fa-car mr-1"></i>{{car.brand}}</span>
                     </div>
                 </div>
+                <!-- Empty state for cars -->
+                <div *ngIf="carlist.length === 0" class="col-span-full text-center py-12 text-slate-500">
+                    <i class="fas fa-car text-4xl mb-3 block opacity-30"></i>
+                    <p>No vehicles purchased yet.</p>
+                    <p class="text-xs mt-1">Browse our <a routerLink="/cars" class="text-indigo-400 hover:underline">Cars</a> section to make a purchase!</p>
+                </div>
             </div>
-            <div class="px-5 py-6 md:px-7 md:py-7">
 
-            </div>
-            <div class="flex items-center justify-between border-b border-white/5 pb-4 mb-6">
+            <!-- Purchased Parts -->
+            <div class="flex items-center justify-between border-b border-white/5 pb-4 mb-6 mt-8 pt-4 border-t border-white/5">
                 <h2 class="text-xl font-semibold text-white flex items-center gap-2">
-                    <i class="fas fa-shopping-bag text-indigo-300 text-lg"></i> Purchased Parts
+                    <i class="fas fa-cogs text-indigo-300 text-lg"></i> Purchased Parts
                     <span
                         class="ml-2 text-xs font-normal bg-indigo-500/20 text-indigo-200 px-2.5 py-0.5 rounded-full">{{data.parts_count}}</span>
                 </h2>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
-
                 <div *ngFor="let part of partlist"
                     class="glass-card rounded-2xl p-4 hover-lift transition-all duration-200 border border-white/5">
                     <div class="flex items-start justify-between">
                         <span
-                            class="bg-sky-500/20 text-sky-200 text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider border border-sky-500/20">Parts</span>
+                            class="bg-sky-500/20 text-sky-200 text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider border border-sky-500/20">Part</span>
+                        <span class="text-[10px] text-slate-400 px-2 py-0.5 rounded-full bg-white/5">{{part.condition || 'New'}}</span>
                     </div>
                     <h3 class="text-white font-semibold text-base mt-3">{{part.name}}</h3>
                     <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-300 mt-0.5">
-                        <span><i class="fas fa-bolt text-indigo-300 w-4"></i>{{part.car}}</span>
+                        <span><i class="fas fa-car text-indigo-300 w-4"></i>{{part.car}}</span>
                     </div>
                     <div class="flex items-center justify-between mt-3">
                         <span class="text-amber-300 font-bold text-lg">{{formatPrice(part.price)}}</span>
+                        <span class="text-[10px] text-slate-400"><i class="fas fa-box mr-1"></i>Qty: {{part.qty || 1}}</span>
                     </div>
+                </div>
+                <!-- Empty state for parts -->
+                <div *ngIf="partlist.length === 0" class="col-span-full text-center py-12 text-slate-500">
+                    <i class="fas fa-cogs text-4xl mb-3 block opacity-30"></i>
+                    <p>No parts purchased yet.</p>
+                    <p class="text-xs mt-1">Browse our <a routerLink="/parts" class="text-indigo-400 hover:underline">Parts</a> section to make a purchase!</p>
                 </div>
             </div>
 
             <!-- footer summary / extra stats -->
-
-            <!-- end purchases -->
             <div
                 class="mt-8 pt-4 border-t border-white/5 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-400">
                 <div class="flex flex-wrap items-center gap-4">
-                    <span><i class="fas fa-tools text-emerald-300 mr-1.5"></i>{{data.parts_count}} parts ·
-                        {{data.product_count}} vehicles</span>
+                    <span><i class="fas fa-car text-emerald-300 mr-1.5"></i>{{data.product_count}} vehicles</span>
+                    <span><i class="fas fa-cogs text-emerald-300 mr-1.5"></i>{{data.parts_count}} parts</span>
+                    <span><i class="fas fa-tools text-emerald-300 mr-1.5"></i>{{data.count}} total items</span>
                 </div>
-                <span class="bg-white/5 px-3 py-1 rounded-full"><i class="fas fa-credit-card mr-1.5"></i>total spent:
+                <span class="bg-white/5 px-3 py-1 rounded-full"><i class="fas fa-credit-card mr-1.5 text-amber-300"></i>total spent:
                     {{formatPrice(data.total)}}</span>
             </div>
         </div>
         <!-- end dashboard -->
-
     </div>
+</div>

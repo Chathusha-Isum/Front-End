@@ -45,7 +45,7 @@ export class Upload implements OnInit, AfterViewInit {
   constructor(private cdr: ChangeDetectorRef, private http: HttpClient) {}
   
   ngOnInit(): void {
-    console.log('Upload ngOnInit');
+    // console.log('Upload ngOnInit');
     
     // Get car ID from localStorage
     this.carId = localStorage.getItem('car') || '';
@@ -57,14 +57,14 @@ export class Upload implements OnInit, AfterViewInit {
       return;
     }
     
-    console.log('Car ID from localStorage:', this.carId);
+    // console.log('Car ID from localStorage:', this.carId);
     
     // Fetch car details from backend
     this.fetchCarDetails(this.carId);
   }
   
   ngAfterViewInit(): void {
-    console.log('Upload ngAfterViewInit - ModelViewer:', this.modelViewer);
+    // console.log('Upload ngAfterViewInit - ModelViewer:', this.modelViewer);
   }
   
   // ==================== FETCH CAR DETAILS ====================
@@ -76,14 +76,14 @@ export class Upload implements OnInit, AfterViewInit {
     this.isLoading = true;
     this.errorMessage = '';
     
-    console.log('Fetching car details for ID:', carId);
+    // console.log('Fetching car details for ID:', carId);
     
     this.http.get(`${this.apiUrl}/product/id?id=${carId}`).subscribe({
       next: (res: any) => {
         this.isLoading = false;
         this.carData = res.data;
         
-        console.log('Car data received:', this.carData);
+        // console.log('Car data received:', this.carData);
         
         // Check if car has a model path
         if (this.carData && this.carData.modelpath) {
@@ -96,7 +96,7 @@ export class Upload implements OnInit, AfterViewInit {
           if (filename) {
             // Build the full URL to access the model
             this.modelUrl = `${this.apiUrl}/api/models/cars/${filename}`;
-            console.log('Model URL:', this.modelUrl);
+            // console.log('Model URL:', this.modelUrl);
             
             // Load the model after a short delay to ensure viewer is ready
             setTimeout(() => {
@@ -147,7 +147,7 @@ export class Upload implements OnInit, AfterViewInit {
     this.isLoading = true;
     this.errorMessage = '';
     
-    console.log('Loading model from URL:', url);
+    // console.log('Loading model from URL:', url);
     
     fetch(url)
       .then(response => {
@@ -173,7 +173,7 @@ export class Upload implements OnInit, AfterViewInit {
         // Load model into viewer
         if (this.modelViewer) {
           this.modelViewer.loadModel(file);
-          console.log('Model loaded successfully');
+          // console.log('Model loaded successfully');
         }
         
         this.isLoading = false;
@@ -220,7 +220,7 @@ export class Upload implements OnInit, AfterViewInit {
             (this.modelViewer as any).setBackendColors(this.backendColors);
           }
           
-          console.log('Colors loaded:', this.backendColors);
+          // console.log('Colors loaded:', this.backendColors);
         }
         this.isLoadingColors = false;
         this.cdr.detectChanges();

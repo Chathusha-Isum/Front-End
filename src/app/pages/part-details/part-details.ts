@@ -98,7 +98,7 @@ export class PartDetails implements OnInit{
 
   addToCart(): void {
     // Add to cart functionality
-    console.log('Adding to cart:', this.partData);
+    // console.log('Adding to cart:', this.partData);
     // You can implement cart logic here
   }
 

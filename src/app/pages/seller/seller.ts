@@ -18,11 +18,13 @@ export class Seller implements OnInit {
     address: "",
     contact: "",
     email: "",
+    profile_pic: "",
     revenue: 0,
     total_sales: 0
   };
   public carlist: any = [];
   public partlist: any = [];
+  public apiUrl = 'http://localhost:8080';
 
   constructor(
     private http: HttpClient, 
@@ -39,12 +41,13 @@ export class Seller implements OnInit {
   }
 
   fetchData(): void {
-    this.http.get(`http://localhost:8080/user/email?email=${this.data.email}`).subscribe({
+    this.http.get(`${this.apiUrl}/user/email?email=${this.data.email}`).subscribe({
       next: (res: any) => {
         this.data.name = res.data.fname + " " + res.data.lname;
         this.data.address = res.data.address;
         this.data.contact = res.data.contact;
         this.data.email = res.data.email;
+        this.data.profile_pic = res.data.profile_pic;
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -54,7 +57,7 @@ export class Seller implements OnInit {
   }
 
   fetchCarData(): void {
-    this.http.get(`http://localhost:8080/seller/cars?email=${this.data.email}`).subscribe({
+    this.http.get(`${this.apiUrl}/seller/cars?email=${this.data.email}`).subscribe({
       next: (res: any) => {
         this.carlist = res.data || [];
         this.data.car_count = this.carlist.length;
@@ -69,7 +72,7 @@ export class Seller implements OnInit {
   }
 
   fetchPartData(): void {
-    this.http.get(`http://localhost:8080/seller/parts?email=${this.data.email}`).subscribe({
+    this.http.get(`${this.apiUrl}/seller/parts?email=${this.data.email}`).subscribe({
       next: (res: any) => {
         this.partlist = res.data || [];
         this.data.parts_count = this.partlist.length;
@@ -84,17 +87,32 @@ export class Seller implements OnInit {
     });
   }
 
+  getProfilePic(): string {
+    if (this.data.profile_pic) {
+      if (this.data.profile_pic.startsWith('http')) {
+        return this.data.profile_pic;
+      }
+      return `${this.apiUrl}${this.data.profile_pic}`;
+    }
+    return `https://ui-avatars.com/api/?name=${this.data.name}&size=110&background=6d28d9&color=fff&bold=true&font-size=0.5`;
+  }
+
   addCar(): void {
-    this.router.navigate(['/add-car']);
+    this.router.navigate(['/add-product']);
   }
 
   addPart(): void {
     this.router.navigate(['/add-part']);
   }
 
+  viewCar(carId: string): void {
+    localStorage.setItem('car', carId);
+    this.router.navigate(['/car-details']);
+  }
+
   deleteCar(carId: string): void {
     if (confirm('Are you sure you want to delete this car?')) {
-      this.http.delete(`http://localhost:8080/product/${carId}`).subscribe({
+      this.http.delete(`${this.apiUrl}/product/delete?id=${carId}`).subscribe({
         next: () => {
           this.carlist = this.carlist.filter((car: any) => car.id !== carId);
           this.data.car_count = this.carlist.length;
@@ -113,7 +131,7 @@ export class Seller implements OnInit {
 
   deletePart(partId: string): void {
     if (confirm('Are you sure you want to delete this part?')) {
-      this.http.delete(`http://localhost:8080/carpart/${partId}`).subscribe({
+      this.http.delete(`${this.apiUrl}/carpart/delete?id=${partId}`).subscribe({
         next: () => {
           this.partlist = this.partlist.filter((part: any) => part.id !== partId);
           this.data.parts_count = this.partlist.length;
@@ -128,5 +146,10 @@ export class Seller implements OnInit {
         }
       });
     }
+  }
+
+  formatPrice(price: number): string {
+    if (!price) return 'LKR 0';
+    return `LKR ${price.toLocaleString()}`;
   }
 }
