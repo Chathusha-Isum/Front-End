@@ -11,6 +11,7 @@ import { Buyer } from './pages/buyer/buyer';
 import { Seller } from './pages/seller/seller';
 import { Addproduct } from './pages/addproduct/addproduct';
 import { Addpart } from './pages/addpart/addpart';
+import { PartDetails } from './pages/part-details/part-details';
 
 export const routes: Routes = [
     {
@@ -20,6 +21,10 @@ export const routes: Routes = [
     {
         path: "car-details",
         component: CarDetails
+    },
+    {
+        path: "part-details",
+        component: PartDetails
     },
     {
         path: "about-us",

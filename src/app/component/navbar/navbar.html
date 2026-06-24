@@ -3,44 +3,126 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
             <!-- Logo -->
-            <a data-motion="logo" href="#" class="flex items-center"
-                style="opacity: 1; transform: scale(1); filter: blur(0px);">
-                <img src="img/logo.png" ln-logo="" class="h-15" alt="Logo">
+            <a data-motion="logo" routerLink="/" class="flex items-center">
+                <img src="img/logo.png" ln-logo="" class="h-12" alt="Logo">
             </a>
 
             <!-- Desktop Navigation -->
-            <nav data-motion="nav" class="hidden lg:flex items-center gap-8"
-                style="opacity: 1; transform: translateY(0px); filter: blur(0px);">
-                <a href=""
+            <nav data-motion="nav" class="hidden lg:flex items-center gap-8">
+                <a routerLink="/"
                     class="text-sm font-medium text-slate-900 dark:text-white hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors">Home</a>
-                <a href="cars"
+                <a routerLink="/cars"
                     class="text-sm font-medium text-slate-600 dark:text-neutral-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors">Cars</a>
-                <a href="parts"
-                    class="text-sm font-medium text-slate-600 dark:text-neutral-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors">Spare Parts</a>
-                <a href="about-us"
+                <a routerLink="/parts"
+                    class="text-sm font-medium text-slate-600 dark:text-neutral-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors">Spare
+                    Parts</a>
+                <a routerLink="/about-us"
                     class="text-sm font-medium text-slate-600 dark:text-neutral-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors">About</a>
-                <a href="aboutus"
+                <a routerLink="/contact"
                     class="text-sm font-medium text-slate-600 dark:text-neutral-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors">Contact</a>
             </nav>
 
             <!-- Right Actions -->
-            <div data-motion="actions" class="flex items-center gap-2"
-                style="opacity: 1; transform: translateY(0px); filter: blur(0px);">
+            <div data-motion="actions" class="flex items-center gap-2">
 
-                <a data-motion="button" href="register"
-                    class="hidden sm:flex h-10 px-5 bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-semibold rounded-xl transition-colors items-center"
-                    style="opacity: 1; transform: translateY(0px); filter: blur(0px);">
-                    Get Started
-                </a>
+                <!-- User Profile / Login Button -->
+                <div *ngIf="!isLoggedIn" class="hidden sm:flex">
+                    <a routerLink="/login"
+                        class="h-10 px-5 bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-semibold rounded-xl transition-colors flex items-center">
+                        Get Started
+                    </a>
+                </div>
+
+                <!-- User Profile Dropdown (Logged In) -->
+                <div *ngIf="isLoggedIn" class="relative hidden sm:block dropdown-container">
+                    <button (click)="toggleDropdown()"
+                        class="flex items-center gap-2 h-10 px-3 bg-slate-800 hover:bg-slate-700 rounded-xl transition-colors border border-slate-700">
+                        <!-- Avatar Circle with Initials -->
+                        <div
+                            class="w-7 h-7 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xs font-bold">
+                            {{ getInitials() }}
+                        </div>
+                        <span class="text-sm font-medium text-white max-w-[80px] truncate">
+                            {{ getFullName() }}
+                        </span>
+                        <svg class="w-4 h-4 text-slate-400 transition-transform duration-200"
+                            [class.rotate-180]="showDropdown" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
+                            </path>
+                        </svg>
+                    </button>
+
+                    <!-- Dropdown Menu -->
+                    <div *ngIf="showDropdown"
+                        class="absolute right-0 mt-2 w-56 bg-slate-800 rounded-xl shadow-2xl shadow-black/50 border border-slate-700 overflow-hidden z-50 dropdown-menu">
+                        <!-- User Info -->
+                        <div class="px-4 py-3 border-b border-slate-700">
+                            <p class="text-sm font-medium text-white">{{ getFullName() }}</p>
+                            <p class="text-xs text-slate-400 truncate">{{ userData?.email }}</p>
+                            <span
+                                class="text-xs px-2 py-0.5 bg-indigo-500/20 text-indigo-300 rounded-full inline-block mt-1">
+                                {{ userData?.role || 'User' }}
+                            </span>
+                        </div>
+
+                        <!-- Menu Items -->
+                        <div class="py-1">
+                            <!-- Dashboard -->
+                            <a (click)="navigateTo(getDashboardRoute())"
+                                class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors cursor-pointer">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z">
+                                    </path>
+                                </svg>
+                                Dashboard
+                            </a>
+
+                            <!-- Edit Profile -->
+                            <a (click)="navigateTo('/edit-profile')"
+                                class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors cursor-pointer">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                </svg>
+                                Edit Profile
+                            </a>
+
+                            <!-- Settings -->
+                            <a (click)="navigateTo('/cart')"
+                                class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors cursor-pointer">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                                Cart
+                            </a>
+
+                            <!-- Divider -->
+                            <div class="border-t border-slate-700 my-1"></div>
+
+                            <!-- Logout -->
+                            <a (click)="logout()"
+                                class="flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors cursor-pointer">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
+                                    </path>
+                                </svg>
+                                Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Hamburger Button -->
-                <button data-motion="button" id="hamburgerBtn"
-                    onclick="this.classList.toggle('active'); document.getElementById('mobileMenu').classList.toggle('active');"
-                    class="hamburger lg:hidden w-10 h-10 flex flex-col items-center justify-center gap-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors"
-                    style="opacity: 1; transform: translateY(0px); filter: blur(0px);">
-                    <span class="w-5 h-0.5 bg-slate-900 dark:bg-white rounded-full"></span>
-                    <span class="w-5 h-0.5 bg-slate-900 dark:bg-white rounded-full"></span>
-                    <span class="w-5 h-0.5 bg-slate-900 dark:bg-white rounded-full"></span>
+                <button (click)="toggleMobileMenu()"
+                    class="lg:hidden w-10 h-10 flex flex-col items-center justify-center gap-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors"
+                    [class.active]="mobileMenuOpen">
+                    <span class="w-5 h-0.5 bg-slate-900 dark:bg-white rounded-full transition-all duration-300"></span>
+                    <span class="w-5 h-0.5 bg-slate-900 dark:bg-white rounded-full transition-all duration-300"
+                        [class.opacity-0]="mobileMenuOpen"></span>
+                    <span class="w-5 h-0.5 bg-slate-900 dark:bg-white rounded-full transition-all duration-300"></span>
                 </button>
             </div>
         </div>
@@ -48,11 +130,24 @@
 
     <!-- Mobile Menu -->
     <div id="mobileMenu"
-        class="mobile-menu lg:hidden bg-white dark:bg-neutral-950 border-t border-slate-100 dark:border-neutral-900">
+        class="lg:hidden bg-white dark:bg-neutral-950 border-t border-slate-100 dark:border-neutral-900"
+        [class.active]="mobileMenuOpen">
         <div class="max-w-7xl mx-auto px-4 py-4 space-y-1">
-            <a data-motion="button" href="#"
-                class="flex items-center gap-3 px-4 py-3 text-slate-900 dark:text-white bg-indigo-50 dark:bg-indigo-900/20 rounded-xl font-medium"
-                style="opacity: 1; transform: translateY(0px); filter: blur(0px);">
+            <!-- User Profile in Mobile -->
+            <div *ngIf="isLoggedIn"
+                class="flex items-center gap-3 px-4 py-3 mb-3 bg-slate-100 dark:bg-neutral-800 rounded-xl">
+                <div
+                    class="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold text-sm">
+                    {{ getInitials() }}
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-slate-900 dark:text-white">{{ getFullName() }}</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">{{ userData?.email }}</p>
+                </div>
+            </div>
+
+            <a routerLink="/" (click)="closeMobileMenu()"
+                class="flex items-center gap-3 px-4 py-3 text-slate-900 dark:text-white bg-indigo-50 dark:bg-indigo-900/20 rounded-xl font-medium">
                 <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6">
@@ -60,37 +155,33 @@
                 </svg>
                 Home
             </a>
-            <a data-motion="button" href="#"
-                class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-800 rounded-xl font-medium transition-colors"
-                style="opacity: 1; transform: translateY(0px); filter: blur(0px);">
+            <a routerLink="/cars" (click)="closeMobileMenu()"
+                class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-800 rounded-xl font-medium transition-colors">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
                 </svg>
-                Products
+                Cars
             </a>
-            <a data-motion="button" href="#"
-                class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-800 rounded-xl font-medium transition-colors"
-                style="opacity: 1; transform: translateY(0px); filter: blur(0px);">
+            <a routerLink="/parts" (click)="closeMobileMenu()"
+                class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-800 rounded-xl font-medium transition-colors">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
                     </path>
                 </svg>
-                Services
+                Spare Parts
             </a>
-            <a data-motion="button" href="#"
-                class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-800 rounded-xl font-medium transition-colors"
-                style="opacity: 1; transform: translateY(0px); filter: blur(0px);">
+            <a routerLink="/about-us" (click)="closeMobileMenu()"
+                class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-800 rounded-xl font-medium transition-colors">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
                 About
             </a>
-            <a data-motion="button" href="#"
-                class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-800 rounded-xl font-medium transition-colors"
-                style="opacity: 1; transform: translateY(0px); filter: blur(0px);">
+            <a routerLink="/contact" (click)="closeMobileMenu()"
+                class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-800 rounded-xl font-medium transition-colors">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
@@ -100,14 +191,23 @@
             </a>
 
             <div class="pt-4 mt-4 border-t border-slate-100 dark:border-neutral-800">
-                <a data-motion="button" href="#"
-                    class="flex items-center justify-center gap-2 w-full h-12 bg-indigo-500 hover:bg-indigo-600 text-white font-semibold rounded-xl transition-colors"
-                    style="opacity: 1; transform: translateY(0px); filter: blur(0px);">
+                <a *ngIf="!isLoggedIn" routerLink="/login" (click)="closeMobileMenu()"
+                    class="flex items-center justify-center gap-2 w-full h-12 bg-indigo-500 hover:bg-indigo-600 text-white font-semibold rounded-xl transition-colors">
                     Get Started
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
                     </svg>
+                </a>
+
+                <a *ngIf="isLoggedIn" (click)="logout()"
+                    class="flex items-center justify-center gap-2 w-full h-12 bg-red-500/20 hover:bg-red-500/30 text-red-300 font-semibold rounded-xl transition-colors cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
+                        </path>
+                    </svg>
+                    Logout
                 </a>
             </div>
         </div>

@@ -1,5 +1,4 @@
 <div class="relative overflow-hidden mt-7 bg-slate-900 dark:bg-neutral-800 ">
-    <!-- Background Image -->
     <div class="absolute inset-0">
         <img data-motion="image"
             src="img/footer.jpeg"
@@ -8,44 +7,40 @@
         <div class="absolute inset-0 bg-linear-to-r from-slate-900 via-slate-900/95 to-slate-900/80"></div>
     </div>
 
-    <!-- Content -->
     <div class="relative z-10 p-8 sm:p-12 lg:p-16">
-        <!-- Top Section -->
         <div
             class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-10 pb-12 border-b border-slate-700">
-            <!-- Logo & Tagline -->
             <div data-motion="logo" class="flex flex-col gap-4"
                 style="opacity: 1; transform: scale(1); filter: blur(0px);">
-                <a href="#" class="flex items-center">
+                <a routerLink="/" class="flex items-center">
                     <img src="img/logo.png" ln-logo="" class="h-20 align-items-start"
                         alt="Logo">
                 </a>
                 <p class="text-slate-400 max-w-xs">Premium Cars. Trusted Service.Where Quality Meets the Road</p>
             </div>
 
-            <!-- Navigation -->
             <nav data-motion="nav" style="opacity: 1; transform: translateY(0px); filter: blur(0px);">
                 <ul class="flex flex-wrap items-center gap-x-10 gap-y-4">
-                    <li><a href=""
+                    <li><a routerLink="/"
                             class="text-base font-medium text-slate-300 hover:text-indigo-400 transition-colors">Home</a>
                     </li>
-                    <li><a href="cars"
+                    <li><a routerLink="/cars"
                             class="text-base font-medium text-slate-300 hover:text-indigo-400 transition-colors">Cars</a>
                     </li>
-                    <li><a href="spare-parts"
+                    <li><a routerLink="/parts"
                             class="text-base font-medium text-slate-300 hover:text-indigo-400 transition-colors">Spare Parts</a>
                     </li>
-                    <li><a href="about-us"
+                    <li><a routerLink="/about-us"
                             class="text-base font-medium text-slate-300 hover:text-indigo-400 transition-colors">About Us</a>
                     </li>
-                    <li><a href="conatct"
+                    <li><a routerLink="/contact"
                             class="text-base font-medium text-slate-300 hover:text-indigo-400 transition-colors">Contact</a>
                     </li>
                 </ul>
             </nav>
 
-            <!-- CTA Button -->
-            <a data-motion="button" href="register"
+            
+            <a *ngIf="!isLoggedIn" data-motion="button" routerLink="/register"
                 class="inline-flex items-center gap-2 px-6 py-3 bg-indigo-500 hover:bg-indigo-600 text-white font-semibold rounded-full transition-colors"
                 style="opacity: 1; transform: translateY(0px); filter: blur(0px);">
                 Get Started
@@ -56,9 +51,7 @@
             </a>
         </div>
 
-        <!-- Bottom Section -->
         <div class="pt-8 flex flex-col sm:flex-row items-center justify-between gap-6">
-            <!-- Legal Links -->
             <ul data-motion="legal" class="flex flex-wrap items-center gap-6"
                 style="opacity: 1; transform: translateY(0px); filter: blur(0px);">
                 <li><a href="#" class="text-sm text-slate-500 hover:text-indigo-400 transition-colors">Terms of
@@ -69,7 +62,6 @@
                         Settings</a></li>
             </ul>
 
-            <!-- Social Icons -->
             <div data-motion="social" class="flex items-center gap-3"
                 style="opacity: 1; transform: translateY(0px); filter: blur(0px);">
                 <a href="#" aria-label="Twitter"
@@ -99,7 +91,6 @@
             </div>
         </div>
 
-        <!-- Copyright -->
         <div data-motion="copyright" class="mt-8 pt-8 border-t border-slate-800 text-center"
             style="opacity: 1; transform: translateY(0px); filter: blur(0px);">
             <p class="text-sm text-slate-500">© 2026 Velocity Technologies. All rights reserved.</p>

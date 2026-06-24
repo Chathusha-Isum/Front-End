@@ -81,4 +81,10 @@ export class Buyer implements OnInit {
       }
     });    
   }
+
+  formatPrice(price: number): string {
+    if (!price) return 'LKR 0';
+    return `LKR ${price.toLocaleString()}`;
+  }
+  
 }
