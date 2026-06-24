@@ -12,7 +12,6 @@
 
 .logo{
     position: sticky;
-
 }
 
 /* Button Row - Perfectly centered */
@@ -44,7 +43,6 @@
     transform: scale(0.85);
     transform: translate(40px, -30px);
     margin-right: -40px;
-    /* z-index: 1; */
 }
 
 .depth-btn[data-pos="1"] {
@@ -52,7 +50,6 @@
     transform: translateX(20px);
     margin-right: -45px;
     margin-left: -10px;
-    /* z-index: 2; */
 }
 
 .depth-btn[data-pos="2"] {
@@ -60,7 +57,6 @@
     transform: translateY(50px);
     margin-left: -20px;
     margin-right: -20px;
-    /* z-index: 10; */
 }
 
 .depth-btn[data-pos="3"] {
@@ -68,14 +64,12 @@
     transform: translateX(-20px);
     margin-left: -45px;
     margin-right: -10px;
-    /* z-index: 2; */
 }
 
 .depth-btn[data-pos="4"] {
     transform: scale(0.85);
     transform: translate(-50px, -40px);
     margin-left: -40px;
-    /* z-index: 1; */
 }
 
 /* On hover - image goes UP */
@@ -100,6 +94,51 @@
 .depth-btn:hover .car-image {
     transform: translateY(-25px);
     filter: drop-shadow(0 25px 35px rgba(0, 0, 0, 0.5));
+}
+
+/* Category Label */
+.category-label {
+    position: absolute;
+    bottom: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #94a3b8;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    white-space: nowrap;
+}
+
+.depth-btn:hover .category-label {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-5px);
+}
+
+/* Popular Badge for Center Button */
+.popular-badge {
+    position: absolute;
+    top: -15px;
+    right: -10px;
+    background: linear-gradient(135deg, #f59e0b, #ef4444);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
 }
 
 /* Remove border radius */
@@ -132,6 +171,58 @@
 
 .depth-btn:hover::after {
     opacity: 1;
+}
+
+/* Lightbox */
+.lightbox {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+.lightbox.active {
+    display: flex;
+}
+
+.lightbox-content {
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain;
+    animation: zoomIn 0.3s ease;
+}
+
+.close-lightbox {
+    position: absolute;
+    top: 20px;
+    right: 40px;
+    color: white;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.close-lightbox:hover {
+    color: #f59e0b;
+}
+
+@keyframes zoomIn {
+    from {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 
 /* Responsive */
@@ -221,7 +312,20 @@
         transform: translate(-20px,-20px);
         margin-left: -20px;
     }
+
+    .category-label {
+        font-size: 10px;
+        bottom: -22px;
+    }
+
+    .popular-badge {
+        font-size: 8px;
+        padding: 2px 8px;
+        top: -10px;
+        right: -5px;
+    }
 }
+
 @media (max-width: 425px) {
     .car-image {
         width: 80px;
@@ -268,5 +372,17 @@
         transform: scale(0.88);
         transform: translate(-2px,-20px);
         margin-left: -20px;
+    }
+
+    .category-label {
+        font-size: 8px;
+        bottom: -18px;
+    }
+
+    .popular-badge {
+        font-size: 7px;
+        padding: 2px 6px;
+        top: -8px;
+        right: -3px;
     }
 }

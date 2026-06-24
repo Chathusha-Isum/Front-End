@@ -1,0 +1,51 @@
+/* Custom select styling */
+select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+/* Number input arrows hidden */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type=number] {
+    -moz-appearance: textfield;
+}
+
+/* Focus ring transition */
+.focus\:ring-2 {
+    transition: all 0.2s ease;
+}
+
+/* Filter chip animations */
+.inline-flex {
+    transition: all 0.2s ease;
+}
+
+.inline-flex button:hover {
+    opacity: 0.8;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+    .flex-wrap {
+        gap: 0.5rem;
+    }
+    
+    .w-28 {
+        width: 100%;
+    }
+    
+    .ml-auto {
+        margin-left: 0;
+        width: 100%;
+    }
+    
+    .ml-auto select {
+        width: 100%;
+    }
+}

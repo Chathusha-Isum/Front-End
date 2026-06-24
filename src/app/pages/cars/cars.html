@@ -1,1 +1,149 @@
-<app-carlist></app-carlist>
+<div class="bg-[#0b1120] min-h-screen text-slate-200 p-4 md:p-6">
+
+    <!-- Header -->
+    <div class="max-w-7xl mx-auto mb-6">
+        <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">Browse Cars</h1>
+        <p class="text-slate-400">Find your dream car from our extensive collection</p>
+    </div>
+
+    <!-- Filters & Search Section -->
+    <div class="max-w-7xl mx-auto mb-6">
+        <div class="bg-slate-800/50 rounded-2xl p-4 md:p-6 border border-slate-700/60">
+            
+            <!-- Search Bar -->
+            <div class="flex flex-col md:flex-row gap-4 mb-4">
+                <div class="flex-1 relative">
+                    <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" 
+                           [(ngModel)]="searchTerm"
+                           (input)="applyFilters()"
+                           placeholder="Search by name, brand, or category..."
+                           class="w-full bg-slate-900/50 text-white rounded-xl pl-11 pr-4 py-3 border border-slate-700/60 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all">
+                </div>
+                <button (click)="clearFilters()" 
+                        class="px-6 py-3 bg-slate-700/50 hover:bg-slate-700 rounded-xl transition-colors text-sm text-slate-300 flex items-center gap-2 whitespace-nowrap">
+                    <i class="fas fa-undo"></i> Clear Filters
+                </button>
+            </div>
+
+            <!-- Filter Chips -->
+            <div class="flex flex-wrap gap-3">
+                <!-- Brand Filter -->
+                <div class="relative">
+                    <select [(ngModel)]="selectedBrand" 
+                            (change)="applyFilters()"
+                            class="bg-slate-900/50 text-white rounded-xl px-4 py-2.5 pr-10 border border-slate-700/60 focus:outline-none focus:ring-2 focus:ring-purple-500/50 appearance-none cursor-pointer text-sm">
+                        <option value="">All Brands</option>
+                        <option *ngFor="let brand of brands" [value]="brand">{{ brand }}</option>
+                    </select>
+                    <i class="fas fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                </div>
+
+                <!-- Category Filter -->
+                <div class="relative">
+                    <select [(ngModel)]="selectedCategory" 
+                            (change)="applyFilters()"
+                            class="bg-slate-900/50 text-white rounded-xl px-4 py-2.5 pr-10 border border-slate-700/60 focus:outline-none focus:ring-2 focus:ring-purple-500/50 appearance-none cursor-pointer text-sm">
+                        <option value="">All Categories</option>
+                        <option *ngFor="let category of categories" [value]="category">{{ category }}</option>
+                    </select>
+                    <i class="fas fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                </div>
+
+                <!-- Fuel Type Filter -->
+                <div class="relative">
+                    <select [(ngModel)]="selectedFuelType" 
+                            (change)="applyFilters()"
+                            class="bg-slate-900/50 text-white rounded-xl px-4 py-2.5 pr-10 border border-slate-700/60 focus:outline-none focus:ring-2 focus:ring-purple-500/50 appearance-none cursor-pointer text-sm">
+                        <option value="">All Fuel Types</option>
+                        <option *ngFor="let fuel of fuelTypes" [value]="fuel">{{ fuel }}</option>
+                    </select>
+                    <i class="fas fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                </div>
+
+                <!-- Price Range -->
+                <div class="flex items-center gap-2">
+                    <div class="relative">
+                        <input type="number" 
+                               [(ngModel)]="minPrice"
+                               (input)="applyFilters()"
+                               placeholder="Min Price"
+                               class="w-28 bg-slate-900/50 text-white rounded-xl px-3 py-2.5 border border-slate-700/60 focus:outline-none focus:ring-2 focus:ring-purple-500/50 text-sm placeholder:text-slate-500">
+                    </div>
+                    <span class="text-slate-500 text-sm">-</span>
+                    <div class="relative">
+                        <input type="number" 
+                               [(ngModel)]="maxPrice"
+                               (input)="applyFilters()"
+                               placeholder="Max Price"
+                               class="w-28 bg-slate-900/50 text-white rounded-xl px-3 py-2.5 border border-slate-700/60 focus:outline-none focus:ring-2 focus:ring-purple-500/50 text-sm placeholder:text-slate-500">
+                    </div>
+                </div>
+
+                <!-- Sort By -->
+                <div class="relative ml-auto">
+                    <select [(ngModel)]="sortBy" 
+                            (change)="applyFilters()"
+                            class="bg-slate-900/50 text-white rounded-xl px-4 py-2.5 pr-10 border border-slate-700/60 focus:outline-none focus:ring-2 focus:ring-purple-500/50 appearance-none cursor-pointer text-sm">
+                        <option value="name">Sort by Name</option>
+                        <option value="price_asc">Price: Low to High</option>
+                        <option value="price_desc">Price: High to Low</option>
+                        <option value="year_desc">Year: Newest</option>
+                        <option value="year_asc">Year: Oldest</option>
+                    </select>
+                    <i class="fas fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                </div>
+            </div>
+
+            <!-- Active Filters Display -->
+            <div *ngIf="hasActiveFilters()" class="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-slate-700/60">
+                <span class="text-xs text-slate-400">Active filters:</span>
+                <span *ngIf="selectedBrand" 
+                      class="inline-flex items-center gap-1.5 bg-purple-500/20 text-purple-300 text-xs px-3 py-1 rounded-full border border-purple-500/20">
+                    Brand: {{ selectedBrand }}
+                    <button (click)="selectedBrand = ''; applyFilters()" class="hover:text-white transition-colors">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </span>
+                <span *ngIf="selectedCategory" 
+                      class="inline-flex items-center gap-1.5 bg-purple-500/20 text-purple-300 text-xs px-3 py-1 rounded-full border border-purple-500/20">
+                    Category: {{ selectedCategory }}
+                    <button (click)="selectedCategory = ''; applyFilters()" class="hover:text-white transition-colors">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </span>
+                <span *ngIf="selectedFuelType" 
+                      class="inline-flex items-center gap-1.5 bg-purple-500/20 text-purple-300 text-xs px-3 py-1 rounded-full border border-purple-500/20">
+                    Fuel: {{ selectedFuelType }}
+                    <button (click)="selectedFuelType = ''; applyFilters()" class="hover:text-white transition-colors">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </span>
+                <span *ngIf="minPrice || maxPrice" 
+                      class="inline-flex items-center gap-1.5 bg-purple-500/20 text-purple-300 text-xs px-3 py-1 rounded-full border border-purple-500/20">
+                    Price: {{ minPrice || '0' }} - {{ maxPrice || '∞' }}
+                    <button (click)="minPrice = null; maxPrice = null; applyFilters()" class="hover:text-white transition-colors">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </span>
+                <span class="text-xs text-slate-500 ml-2">
+                    {{ getFilteredCount() }} result(s)
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Count -->
+    <div class="max-w-7xl mx-auto mb-4 flex items-center justify-between">
+        <span class="text-sm text-slate-400">
+            Showing <span class="text-white font-medium">{{ getFilteredCount() }}</span> cars
+            <span *ngIf="getTotalCount() > 0">out of <span class="text-white font-medium">{{ getTotalCount() }}</span></span>
+        </span>
+        <span *ngIf="searchTerm" class="text-sm text-slate-400">
+            Searching for: "<span class="text-purple-300">{{ searchTerm }}</span>"
+        </span>
+    </div>
+
+    <!-- Car Grid -->
+    <app-carlist [cars]="filteredList"></app-carlist>
+</div>

@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
@@ -10,7 +10,8 @@ import { Router } from '@angular/router';
   templateUrl: './partlist.html',
   styleUrls: ['./partlist.css']
 })
-export class Partlist implements OnInit {
+export class Partlist implements OnInit, OnChanges {
+  @Input() parts: any[] = [];  // 👈 Input property
   list: any[] = [];
   loading = false;
   error = '';
@@ -35,64 +36,61 @@ export class Partlist implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.fetchData();
+    // If no parts provided via Input, fetch all
+    if (!this.parts || this.parts.length === 0) {
+      this.fetchData();
+    } else {
+      this.list = this.parts;
+    }
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    // Update list when input parts change
+    if (changes['parts']) {
+      this.list = changes['parts'].currentValue || [];
+      this.cdr.detectChanges();
+    }
   }
 
   fetchData(): void {
     this.loading = true;
     this.error = '';
     
-    this.http.get(`${this.apiUrl}/carpart/`)
-      .subscribe({
-        next: (data: any) => {       
-          this.list = data.data || [];
-          this.loading = false;
-          this.cdr.detectChanges();
-        },
-        error: (error) => {
-          console.error('Error fetching parts:', error);
-          this.error = error.error?.message || 'Failed to load parts. Please try again.';
-          this.loading = false;
-          this.cdr.detectChanges();
-        }
-      });
+    this.http.get(`${this.apiUrl}/carpart/`).subscribe({
+      next: (data: any) => {       
+        this.list = data.data || [];
+        this.loading = false;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error fetching parts:', error);
+        this.error = error.error?.message || 'Failed to load parts. Please try again.';
+        this.loading = false;
+        this.cdr.detectChanges();
+      }
+    });
   }
 
-  /**
-   * Get full image URL
-   */
   getImageUrl(imgpath: string): string {
     if (!imgpath) return this.defaultImage;
-    // If it's already a full URL (starts with http)
     if (imgpath.startsWith('http://') || imgpath.startsWith('https://')) {
       return imgpath;
     }
-    // If it's a relative path from uploads
     if (imgpath.startsWith('/uploads/')) {
       return `${this.apiUrl}${imgpath}`;
     }
-    // If it's just a filename, assume it's in uploads/parts
     return `${this.apiUrl}/uploads/parts/${imgpath}`;
   }
 
-  /**
-   * Get condition badge color class
-   */
   getConditionColor(condition: string): string {
     return this.conditionColors[condition] || 'bg-gray-500/20 text-gray-200 border-gray-500/20';
   }
 
-  /**
-   * Format price with LKR
-   */
   formatPrice(price: number): string {
     if (!price) return 'LKR 0';
     return `LKR ${price.toLocaleString()}`;
   }
 
-  /**
-   * Navigate to part details page
-   */
   navigate(id: string): void {
     localStorage.setItem('part', id);
     this.router.navigate(['/part-details']);

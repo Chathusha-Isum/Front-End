@@ -1,5 +1,6 @@
-import { Component, ElementRef, AfterViewInit, OnDestroy, HostListener } from '@angular/core';
+import { Component, ElementRef, AfterViewInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-hero',
@@ -10,19 +11,22 @@ import { CommonModule } from '@angular/common';
 })
 export class Hero implements AfterViewInit, OnDestroy {
   
-  // Car data
+  // Car data with category mapping
   cars = [
-    { position: 0, category: 'Hatch Back', badge: 'Compact', image: '3-2.png', color: 'purple' },
-    { position: 1, category: 'Super Car', badge: 'Luxury', image: '2-2.png', color: 'red' },
+    { position: 0, category: 'Hatchback', badge: 'Compact', image: '3-2.png', color: 'purple' },
+    { position: 1, category: 'Sports', badge: 'Luxury', image: '2-2.png', color: 'red' },
     { position: 2, category: 'SUV', badge: 'Most Popular', image: '1.png', color: 'orange' },
     { position: 3, category: 'Sedan', badge: 'Comfort', image: '2-1.png', color: 'green' },
-    { position: 4, category: 'Cab', badge: 'Ride', image: '3-1.png', color: 'yellow' }
+    { position: 4, category: 'Truck', badge: 'Ride', image: '3-1.png', color: 'yellow' }
   ];
 
   private lightboxElement: HTMLElement | null = null;
   private lightboxImg: HTMLImageElement | null = null;
 
-  constructor(private el: ElementRef) {}
+  constructor(
+    private el: ElementRef,
+    private router: Router
+  ) {}
 
   ngAfterViewInit(): void {
     this.initLightbox();
@@ -30,15 +34,12 @@ export class Hero implements AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    // Clean up lightbox event listeners
     document.removeEventListener('keydown', this.handleEscKey.bind(this));
   }
 
   private initLightbox(): void {
     this.lightboxElement = document.getElementById('lightbox');
     this.lightboxImg = document.getElementById('lightbox-img') as HTMLImageElement;
-    
-    // Add escape key listener
     document.addEventListener('keydown', this.handleEscKey.bind(this));
   }
 
@@ -48,15 +49,11 @@ export class Hero implements AfterViewInit, OnDestroy {
     buttons.forEach((btn) => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
-        const imageSrc = btn.getAttribute('data-image');
         const category = btn.getAttribute('data-category');
         
-        if (imageSrc && this.lightboxImg && this.lightboxElement) {
-          this.lightboxImg.src = imageSrc;
-          this.lightboxElement.classList.add('active');
+        if (category) {
+          this.navigateToCategory(category);
         }
-        
-        // console.log(`Clicked: ${category}`);
       });
     });
   }
@@ -78,10 +75,28 @@ export class Hero implements AfterViewInit, OnDestroy {
     }
   }
 
-  // Optional: Add method to navigate to category page
+  /**
+   * Navigate to cars page with category filter
+   */
   navigateToCategory(category: string): void {
-    // Navigate to category page
-    // this.router.navigate([`/category/${category.toLowerCase().replace(' ', '-')}`]);
-    // console.log(`Navigate to: ${category}`);
+    // Store category in localStorage for the cars page to pick up
+    localStorage.setItem('filterCategory', category);
+    
+    // Navigate to cars page
+    this.router.navigate(['/cars']);
+  }
+
+  /**
+   * Get category display name
+   */
+  getCategoryDisplay(category: string): string {
+    const displayNames: { [key: string]: string } = {
+      'Hatchback': 'Hatch Back',
+      'Sports': 'Super Car',
+      'SUV': 'SUV',
+      'Sedan': 'Sedan',
+      'Truck': 'Cab'
+    };
+    return displayNames[category] || category;
   }
 }

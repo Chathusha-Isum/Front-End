@@ -34,10 +34,8 @@ export class Login {
       .subscribe({
         next: (data: any) => {
           const role = data.data.role.replace(/\s/g, '').trim();
-          if (role === "buyer") {
+          if (role === "user") {
             this.router.navigate(["/buyer-dashboard"]);
-          } else if (role === "seller") {
-            this.router.navigate(["/seller-dashboard"]);
           } else {
             this.router.navigate(["/both-dashboard"]);
           }

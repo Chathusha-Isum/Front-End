@@ -24,9 +24,9 @@ export class Register {
     contact: "",
     profile_pic: null,
     status: "active",
-    role: ""
+    role: "user"
   }
-  
+
   public selectedProfilePic: File | null = null;
   public profilePicPreview: string | null = null;
   private apiUrl = 'http://localhost:8080';
@@ -34,7 +34,7 @@ export class Register {
   constructor(private http: HttpClient, private router: Router) {
     this.http.get(`${this.apiUrl}/user/`).subscribe({
       next: (res: any) => {
-        this.user.id = "USER"+((res.data["length"]) + 1);
+        this.user.id = "USER" + ((res.data["length"]) + 1);
       }
     });
   }
@@ -52,7 +52,7 @@ export class Register {
         });
         return;
       }
-      
+
       if (file.size > 5 * 1024 * 1024) {
         swal.fire({
           title: 'File too large',
@@ -62,9 +62,9 @@ export class Register {
         });
         return;
       }
-      
+
       this.selectedProfilePic = file;
-      
+
       const reader = new FileReader();
       reader.onload = (e) => {
         this.profilePicPreview = e.target?.result as string;
@@ -85,7 +85,7 @@ export class Register {
     formData.append('contact', this.user.contact);
     formData.append('status', this.user.status);
     formData.append('role', this.user.role);
-    
+
     if (this.selectedProfilePic) {
       formData.append('profile_pic', this.selectedProfilePic, this.selectedProfilePic.name);
     }
@@ -94,19 +94,12 @@ export class Register {
       next: (response: any) => {
         this.showMessage(response.message);
         localStorage.setItem("email", this.user.email);
-        
+
         // Fetch user data to store in localStorage
         this.http.get(`${this.apiUrl}/user/email?email=${this.user.email}`).subscribe({
           next: (res: any) => {
             localStorage.setItem('userData', JSON.stringify(res.data));
-            const role = res.data.role?.toLowerCase() || '';
-            if (role === 'buyer') {
-              this.router.navigate(['/buyer-dashboard']);
-            } else if (role === 'seller') {
-              this.router.navigate(['/seller-dashboard']);
-            } else {
-              this.router.navigate(['/dashboard']);
-            }
+            this.router.navigate(['/buyer-dashboard']);
           },
           error: () => {
             this.router.navigate(['/dashboard']);
@@ -118,7 +111,7 @@ export class Register {
       }
     });
   }
-  
+
   private showMessage(message: string) {
     swal.fire({
       title: message,
@@ -126,7 +119,7 @@ export class Register {
       confirmButtonText: 'OK'
     });
   }
-  
+
   private showError(message: string) {
     swal.fire({
       title: message,

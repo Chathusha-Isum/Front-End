@@ -49,6 +49,9 @@
                 <span *ngIf="data.mileage" class="flex items-center gap-1">
                     <i class="fas fa-tachometer-alt"></i> {{ data.mileage }} km
                 </span>
+                <span *ngIf="data.category" class="flex items-center gap-1">
+                    <i class="fas fa-tag"></i> {{ data.category }}
+                </span>
             </div>
 
             <!-- Price -->
@@ -57,7 +60,7 @@
                     {{ formatPrice(data.price) }}
                 </span>
                 <span class="text-[10px] text-slate-400 flex items-center gap-1">
-                    <i class="fas fa-car"></i> View Details
+                    <i class="fas fa-eye"></i> View
                 </span>
             </div>
         </div>
@@ -67,5 +70,6 @@
     <div *ngIf="!loading && !error && list.length === 0" class="col-span-full text-center py-12">
         <i class="fas fa-car text-4xl text-slate-600 mb-4 block"></i>
         <p class="text-slate-400">No cars available at the moment.</p>
+        <p class="text-slate-500 text-sm mt-1">Try adjusting your filters or search terms.</p>
     </div>
 </div>
