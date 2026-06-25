@@ -104,10 +104,11 @@ export class Buyer implements OnInit {
 
   getProfilePic(): string {
     if (this.data.profile_pic) {
+      
       if (this.data.profile_pic.startsWith('http')) {
         return this.data.profile_pic;
       }
-      return `${this.apiUrl}${this.data.profile_pic}`;
+      return `${this.apiUrl}/api/images/profiles/${this.data.profile_pic}`;
     }
     return `https://ui-avatars.com/api/?name=${this.data.name}&size=110&background=2b5f7a&color=fff&bold=true&font-size=0.5`;
   }

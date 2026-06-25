@@ -11,10 +11,10 @@
             <!-- profile image + badge -->
             <div class="flex items-center gap-4 md:gap-5">
                 <div class="relative">
-                    <img [src]="getProfilePic()"
-                        [alt]="data.name + ' profile'"
-                        class="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover ring-2 ring-indigo-400/50 shadow-xl shadow-indigo-900/20" />
-                </div>
+                            <img [src]="getProfilePic()" 
+                                 [alt]="data?.fname + ' ' + data?.lname"
+                                 class="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover ring-4 ring-indigo-500/30 shadow-xl shadow-indigo-900/20">
+                        </div>
                 <div class="md:hidden">
                     <h1 class="text-2xl font-bold tracking-tight text-white flex items-center gap-2">{{data.name}}</h1>
                     <div class="flex flex-wrap gap-2 mt-1 text-xs text-slate-300">

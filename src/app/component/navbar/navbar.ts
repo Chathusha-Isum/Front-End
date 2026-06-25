@@ -146,9 +146,8 @@ export class Navbar implements OnInit, OnDestroy {
   getDashboardRoute(): string {
     if (!this.userData) return '/';
     const role = this.userData.role?.toLowerCase() || '';
-    if (role === 'buyer') return '/buyer-dashboard';
-    if (role === 'seller') return '/seller-dashboard';
-    if (role === 'both') return '/both-dashboard';
+    if (role === 'user') return '/buyer-dashboard';
+    if (role === 'admin') return '/admin-dashboard';
     return '/';
   }
 

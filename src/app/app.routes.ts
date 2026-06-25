@@ -8,7 +8,7 @@ import { Register } from './pages/register/register';
 import { Cars } from './pages/cars/cars';
 import { Parts } from './pages/parts/parts';
 import { Buyer } from './pages/buyer/buyer';
-import { Seller } from './pages/seller/seller';
+import { EditProfile } from './pages/edit-profile/edit-profile';
 import { Addproduct } from './pages/addproduct/addproduct';
 import { Addpart } from './pages/addpart/addpart';
 import { PartDetails } from './pages/part-details/part-details';
@@ -52,8 +52,8 @@ export const routes: Routes = [
         component: Buyer
     },
     {
-        path: "seller-dashboard",
-        component: Seller
+        path: "edit-profile",
+        component: EditProfile
     },
     {
         path: "add-product",
