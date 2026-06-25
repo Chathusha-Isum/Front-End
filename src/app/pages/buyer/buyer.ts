@@ -86,8 +86,11 @@ export class Buyer implements OnInit {
         for (let i = 0; i < this.result.length; i++) {
           this.http.get(`${this.apiUrl}/carpart/id?id=${this.result[i].part}`).subscribe({
             next: (res: any) => {
-              this.partlist[i] = res.data;
-              this.data.total += res.data.price;
+              this.partlist[i] = res.data;              
+              this.partlist[i].qty = this.result[i].qty;
+              this.partlist[i].price = (res.data.price * this.result[i].qty);
+              this.data.total += (res.data.price * this.result[i].qty);
+
               this.cdr.detectChanges();
             },
             error: (err) => {

@@ -1,0 +1,28 @@
+/* Form focus and transition styles */
+#_contact_v6_001 input:focus,
+#_contact_v6_001 textarea:focus,
+#_contact_v6_001 select:focus {
+  outline: none;
+}
+
+#_contact_v6_001 input::placeholder,
+#_contact_v6_001 textarea::placeholder {
+  color: #94a3b8;
+}
+
+#_contact_v6_001 .dark input::placeholder,
+#_contact_v6_001 .dark textarea::placeholder {
+  color: #64748b;
+}
+
+/* Smooth hover transition for submit button */
+#_contact_v6_001 button[type="submit"] {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  #_contact_v6_001 .grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+}
