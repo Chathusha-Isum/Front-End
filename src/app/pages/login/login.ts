@@ -46,6 +46,18 @@ export class Login {
         }
       });
   }
+  forgotPassword(){
+    if(this.user.email === ""){
+      this.showError("Enter Email First");
+    }
+    else{
+      this.http.get(`http://localhost:8080/user/forgot-password?email=${this.user.email}`).subscribe({
+        next : (res: any)=>{            
+            this.showMessage(res.message);
+        }
+      })
+    }
+  }
 
   private showMessage(message: string) {
     swal.fire({
@@ -62,4 +74,5 @@ export class Login {
       confirmButtonText: 'OK'
     });
   }
+  
 }

@@ -14,6 +14,7 @@ import { Addproduct } from './pages/addproduct/addproduct';
 import { Addpart } from './pages/addpart/addpart';
 import { PartDetails } from './pages/part-details/part-details';
 import { Cart } from './pages/cart/cart';
+import { ForgotPassword } from './pages/forgot-password/forgot-password';
 
 export const routes: Routes = [
     {
@@ -71,6 +72,10 @@ export const routes: Routes = [
     {
         path: "cart",
         component: Cart
+    },
+    {
+        path: "forgotpassword",
+        component: ForgotPassword
     },
     
 ];
