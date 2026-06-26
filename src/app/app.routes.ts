@@ -9,6 +9,7 @@ import { Register } from './pages/register/register';
 import { Cars } from './pages/cars/cars';
 import { Parts } from './pages/parts/parts';
 import { Buyer } from './pages/buyer/buyer';
+import { Admin } from './pages/admin/admin';
 import { EditProfile } from './pages/edit-profile/edit-profile';
 import { Addproduct } from './pages/addproduct/addproduct';
 import { Addpart } from './pages/addpart/addpart';
@@ -56,6 +57,10 @@ export const routes: Routes = [
     {
         path: "buyer-dashboard",
         component: Buyer
+    },
+    {
+        path: "admin-dashboard",
+        component: Admin
     },
     {
         path: "edit-profile",

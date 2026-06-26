@@ -37,7 +37,7 @@ export class Login {
           if (role === "user") {
             this.router.navigate(["/buyer-dashboard"]);
           } else {
-            this.router.navigate(["/both-dashboard"]);
+            this.router.navigate(["/admin-dashboard"]);
           }
         },
         error: (err) => {
