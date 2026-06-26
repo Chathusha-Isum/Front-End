@@ -6,7 +6,6 @@
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
             <div>
                 <h1 class="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
-                    <i class="fas fa-chart-line text-indigo-400"></i>
                     Admin Dashboard
                 </h1>
                 <p class="text-slate-400 text-sm mt-1">Manage your auto marketplace</p>
@@ -39,7 +38,7 @@
                             <p class="text-2xl font-bold text-white mt-1">{{formatPrice(totalRevenue)}}</p>
                         </div>
                         <div class="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                            <i class="fas fa-dollar-sign text-emerald-400 text-xl"></i>
+                            <i class="fas fa-money-bill-wave text-emerald-400 text-xl"></i>
                         </div>
                     </div>
                     <div class="mt-2 text-xs text-emerald-400">
@@ -100,7 +99,7 @@
             <!-- ===== QUICK ACTIONS ===== -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 mb-6">
                 <div class="glass-card rounded-2xl p-6 border border-white/5 hover-lift cursor-pointer"
-                    (click)="navigateTo('/admin/cars')">
+                    (click)="navigateTo('/manage-products')">
                     <div class="flex items-center gap-4">
                         <div class="w-12 h-12 rounded-full bg-indigo-500/20 flex items-center justify-center">
                             <i class="fas fa-car text-indigo-400 text-xl"></i>
@@ -113,7 +112,7 @@
                     </div>
                 </div>
                 <div class="glass-card rounded-2xl p-6 border border-white/5 hover-lift cursor-pointer"
-                    (click)="navigateTo('/admin/parts')">
+                    (click)="navigateTo('/manage-parts')">
                     <div class="flex items-center gap-4">
                         <div class="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
                             <i class="fas fa-cogs text-emerald-400 text-xl"></i>
@@ -197,7 +196,7 @@
                                 <td class="py-3 px-3 text-white font-mono text-xs">#{{order.id}}</td>
                                 <td class="py-3 px-3">
                                     <div class="flex items-center gap-2">
-                                        <img [src]="order.customerAvatar || 'https://ui-avatars.com/api/?name=' + order.customer + '&background=2b5f7a&color=fff&size=32'"
+                                        <img [src]="getProfile(order.customer)"
                                             class="w-8 h-8 rounded-full object-cover">
                                         <span>{{order.customer}}</span>
                                     </div>

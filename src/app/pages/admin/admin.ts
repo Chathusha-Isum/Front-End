@@ -54,7 +54,7 @@ export class Admin implements OnInit, AfterViewInit, OnDestroy {
     private http: HttpClient,
     private cdr: ChangeDetectorRef,
     private router: Router
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.loadDashboardData();
@@ -123,7 +123,6 @@ export class Admin implements OnInit, AfterViewInit, OnDestroy {
       },
       error: (error) => {
         console.warn('Using mock data due to API error:', error);
-        this.useMockData();
       }
     });
   }
@@ -132,7 +131,6 @@ export class Admin implements OnInit, AfterViewInit, OnDestroy {
     // If no users, use mock data
     if (this.allUsers.length === 0) {
       console.warn('No users found, using mock data');
-      this.useMockData();
       return;
     }
 
@@ -156,7 +154,6 @@ export class Admin implements OnInit, AfterViewInit, OnDestroy {
     // If no valid requests, use mock data
     if (carRequests.length === 0) {
       console.warn('No valid users with email, using mock data');
-      this.useMockData();
       return;
     }
 
@@ -203,29 +200,13 @@ export class Admin implements OnInit, AfterViewInit, OnDestroy {
           },
           error: (error) => {
             console.warn('Error fetching part purchases, using mock data:', error);
-            this.useMockData();
           }
         });
       },
       error: (error) => {
         console.warn('Error fetching car purchases, using mock data:', error);
-        this.useMockData();
       }
     });
-  }
-
-  useMockData(): void {
-    this.allUsers = this.getMockUsers();
-    this.activeUsers = this.allUsers.filter((u: any) => u.status === 'active').length;
-    this.allProducts = this.getMockProducts();
-    this.totalProducts = this.allProducts.length;
-    this.allParts = this.getMockParts();
-    this.totalParts = this.allParts.length;
-    this.allUserProducts = this.getMockUserProducts();
-    this.allUserParts = this.getMockUserParts();
-    
-    console.log('✅ Using mock data');
-    this.processLoadedData();
   }
 
   processLoadedData(): void {
@@ -235,7 +216,7 @@ export class Admin implements OnInit, AfterViewInit, OnDestroy {
     this.generateAllOrders();  // Generate ALL orders first
     this.generateOrdersData();
     this.cdr.detectChanges();
-    
+
     setTimeout(() => {
       if (!this.chartsCreated) {
         this.createCharts();
@@ -245,7 +226,7 @@ export class Admin implements OnInit, AfterViewInit, OnDestroy {
 
   calculateRevenue(): void {
     let total = 0;
-    
+
     // Calculate revenue from ALL cars purchased by ALL users
     if (this.allUserProducts && this.allProducts) {
       this.allUserProducts.forEach((up: any) => {
@@ -319,7 +300,7 @@ export class Admin implements OnInit, AfterViewInit, OnDestroy {
 
     // Sort by date (newest first)
     this.allOrders = orders.sort((a, b) => b.date.getTime() - a.date.getTime());
-    
+
     // Set recent orders to first 5
     this.recentOrders = this.allOrders.slice(0, 5);
 
@@ -371,7 +352,7 @@ export class Admin implements OnInit, AfterViewInit, OnDestroy {
   }
 
   getChartLabels(): string[] {
-    switch(this.chartPeriod) {
+    switch (this.chartPeriod) {
       case 'weekly':
         return ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
       case 'monthly':
@@ -387,9 +368,9 @@ export class Admin implements OnInit, AfterViewInit, OnDestroy {
     const hasActualData = this.totalRevenue > 0;
     const baseRevenue = hasActualData ? this.totalRevenue / 30 : 50000;
     const data: number[] = [];
-    
+
     const length = this.chartPeriod === 'weekly' ? 7 : this.chartPeriod === 'monthly' ? 4 : 12;
-    
+
     if (hasActualData) {
       for (let i = 0; i < length; i++) {
         const variation = 0.7 + (Math.random() * 0.6);
@@ -403,7 +384,7 @@ export class Admin implements OnInit, AfterViewInit, OnDestroy {
         data.push(Math.max(0, value));
       }
     }
-    
+
     return data;
   }
 
@@ -424,10 +405,10 @@ export class Admin implements OnInit, AfterViewInit, OnDestroy {
       console.error('Revenue canvas context not found');
       return;
     }
-    
+
     const labels = this.getChartLabels();
     this.revenueData = this.getRevenueDataForPeriod();
-    
+
     this.revenueChart = new Chart(ctx, {
       type: 'line',
       data: {
@@ -507,7 +488,7 @@ export class Admin implements OnInit, AfterViewInit, OnDestroy {
       console.error('Orders canvas context not found');
       return;
     }
-    
+
     const colors = ['#6366f1', '#10b981'];
     const backgroundColors = colors.map(c => c + '40');
 
@@ -653,23 +634,23 @@ Total Parts:   ${data.stats.totalParts}
 ===========================================
   REVENUE DATA (${data.period})
 ===========================================
-${data.revenueData.map((d: number, i: number) => 
-  `  ${this.getChartLabels()[i] || `Day ${i+1}`}: ${this.formatPrice(d)}`
-).join('\n')}
+${data.revenueData.map((d: number, i: number) =>
+      `  ${this.getChartLabels()[i] || `Day ${i + 1}`}: ${this.formatPrice(d)}`
+    ).join('\n')}
 
 ===========================================
   ORDER DISTRIBUTION
 ===========================================
-${data.ordersData.labels.map((label: string, i: number) => 
-  `  ${label}: ${data.ordersData.data[i]} orders`
-).join('\n')}
+${data.ordersData.labels.map((label: string, i: number) =>
+      `  ${label}: ${data.ordersData.data[i]} orders`
+    ).join('\n')}
 
 ===========================================
   RECENT ORDERS
 ===========================================
-${data.recentOrders.map((order: any) => 
-  `  #${order.id} | ${order.customer} | ${order.items} | ${this.formatPrice(order.total)}`
-).join('\n')}
+${data.recentOrders.map((order: any) =>
+      `  #${order.id} | ${order.customer} | ${order.items} | ${this.formatPrice(order.total)}`
+    ).join('\n')}
     `;
 
     const blob = new Blob([reportContent], { type: 'text/plain' });
@@ -681,51 +662,21 @@ ${data.recentOrders.map((order: any) =>
     window.URL.revokeObjectURL(url);
   }
 
-  private getMockUsers(): any[] {
-    return [
-      { id: 'usr_001', fname: 'Admin', lname: 'User', email: 'admin@example.com', status: 'active', profile_pic: '' },
-      { id: 'usr_002', fname: 'Sarah', lname: 'Johnson', email: 'sarah@example.com', status: 'active', profile_pic: '' },
-      { id: 'usr_003', fname: 'Michael', lname: 'Chen', email: 'michael@example.com', status: 'active', profile_pic: '' },
-      { id: 'usr_004', fname: 'Emily', lname: 'Davis', email: 'emily@example.com', status: 'inactive', profile_pic: '' },
-      { id: 'usr_005', fname: 'David', lname: 'Wilson', email: 'david@example.com', status: 'active', profile_pic: '' }
-    ];
-  }
+  getProfile(name: string): any {
+    this.allUsers
+    for (let i = 0; i < this.allUsers.length; i++) {
+      const username = this.allUsers[i].fname + " " + this.allUsers[i].lname
+      if (username === name) {
+        if (this.allUsers[i].profile_pic) {
 
-  private getMockProducts(): any[] {
-    return [
-      { id: 'car_001', name: 'Toyota Hilux GR', price: '12500000' },
-      { id: 'car_002', name: 'Lexus LX600', price: '35000000' },
-      { id: 'car_003', name: 'BMW X5 M', price: '40000000' },
-      { id: 'car_004', name: 'Mercedes G-Wagon', price: '45000000' }
-    ];
-  }
-
-  private getMockParts(): any[] {
-    return [
-      { id: 'prt_001', name: 'Performance Air Filter', car: 'Hilux GR', price: '89' },
-      { id: 'prt_002', name: 'Heavy-Duty Floor Mats', car: 'Hilux GR', price: '45' },
-      { id: 'prt_003', name: 'LED Light Bar Kit', car: 'Hilux GR', price: '199' }
-    ];
-  }
-
-  private getMockUserProducts(): any[] {
-    return [
-      { userid: 'usr_002', product: 'car_001', userName: 'Sarah Johnson' },
-      { userid: 'usr_002', product: 'car_002', userName: 'Sarah Johnson' },
-      { userid: 'usr_003', product: 'car_003', userName: 'Michael Chen' },
-      { userid: 'usr_005', product: 'car_001', userName: 'David Wilson' },
-      { userid: 'usr_005', product: 'car_004', userName: 'David Wilson' }
-    ];
-  }
-
-  private getMockUserParts(): any[] {
-    return [
-      { userid: 'usr_002', part: 'prt_001', qty: 2, userName: 'Sarah Johnson' },
-      { userid: 'usr_003', part: 'prt_002', qty: 1, userName: 'Michael Chen' },
-      { userid: 'usr_001', part: 'prt_003', qty: 5, userName: 'Admin User' },
-      { userid: 'usr_005', part: 'prt_001', qty: 1, userName: 'David Wilson' },
-      { userid: 'usr_002', part: 'prt_003', qty: 3, userName: 'Sarah Johnson' }
-    ];
+          if (this.allUsers[i].profile_pic.startsWith('http')) {
+            return this.allUsers[i].profile_pic;
+          }
+          return `${this.apiUrl}/api/images/profiles/${this.allUsers[i].profile_pic}`;
+        }
+        return `https://ui-avatars.com/api/?name=${this.allUsers[i].name}&size=110&background=2b5f7a&color=fff&bold=true&font-size=0.5`;
+      }
+    }
   }
 
   ngOnDestroy(): void {

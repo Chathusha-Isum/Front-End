@@ -11,11 +11,11 @@ import { Parts } from './pages/parts/parts';
 import { Buyer } from './pages/buyer/buyer';
 import { Admin } from './pages/admin/admin';
 import { EditProfile } from './pages/edit-profile/edit-profile';
-import { Addproduct } from './pages/addproduct/addproduct';
-import { Addpart } from './pages/addpart/addpart';
 import { PartDetails } from './pages/part-details/part-details';
 import { Cart } from './pages/cart/cart';
 import { ForgotPassword } from './pages/forgot-password/forgot-password';
+import { ManageCars } from './pages/manage-cars/manage-cars';
+import { ManageParts } from './pages/manage-parts/manage-parts';
 
 export const routes: Routes = [
     {
@@ -67,20 +67,20 @@ export const routes: Routes = [
         component: EditProfile
     },
     {
-        path: "add-product",
-        component: Addproduct
-    },
-    {
-        path: "add-part",
-        component: Addpart
-    },
-    {
         path: "cart",
         component: Cart
     },
     {
         path: "forgotpassword",
         component: ForgotPassword
+    },
+    {
+        path: "manage-products",
+        component: ManageCars
+    },
+    {
+        path: "manage-parts",
+        component: ManageParts
     },
     
 ];

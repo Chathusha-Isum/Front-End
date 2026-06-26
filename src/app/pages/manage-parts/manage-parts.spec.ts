@@ -1,17 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { Addpart } from './addpart';
+import { ManageParts } from './manage-parts';
 
-describe('Addpart', () => {
-  let component: Addpart;
-  let fixture: ComponentFixture<Addpart>;
+describe('ManageParts', () => {
+  let component: ManageParts;
+  let fixture: ComponentFixture<ManageParts>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [Addpart],
+      imports: [ManageParts],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(Addpart);
+    fixture = TestBed.createComponent(ManageParts);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

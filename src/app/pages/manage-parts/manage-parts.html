@@ -1,0 +1,227 @@
+<div class="bg-[#0b1120] text-slate-200 font-sans antialiased min-h-screen p-4 md:p-6">
+  <div class="w-full max-w-7xl mx-auto">
+    
+    <!-- ===== HEADER ===== -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+      <div class="flex items-center gap-4">
+        <button (click)="goBack()" class="text-slate-400 hover:text-white transition-colors">
+          <i class="fas fa-arrow-left text-xl"></i>
+        </button>
+        <div>
+          <h1 class="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
+            <i class="fas fa-cogs text-emerald-400"></i>
+            Manage Parts
+          </h1>
+          <p class="text-slate-400 text-sm mt-1">Add, edit, or delete car parts</p>
+        </div>
+      </div>
+      <button (click)="openAddModal()" class="btn-primary flex items-center gap-2">
+        <i class="fas fa-plus"></i>
+        Add New Part
+      </button>
+    </div>
+
+    <!-- ===== SEARCH & FILTER ===== -->
+    <div class="glass-card rounded-2xl p-4 border border-white/5 mb-6">
+      <div class="flex flex-col sm:flex-row gap-4">
+        <div class="flex-1 flex items-center gap-2 bg-slate-800/50 rounded-lg px-4 py-2 border border-white/5">
+          <i class="fas fa-search text-slate-400"></i>
+          <input 
+            type="text" 
+            [(ngModel)]="searchTerm" 
+            (keyup.enter)="searchParts()"
+            placeholder="Search parts by name or car model..."
+            class="w-full bg-transparent text-white outline-none"
+          >
+          <button *ngIf="searchTerm" (click)="clearSearch()" class="text-slate-400 hover:text-white">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <select [(ngModel)]="conditionFilter" (change)="filterByCondition(conditionFilter)" class="bg-slate-800/50 rounded-lg px-4 py-2 border border-white/5 text-white outline-none focus:border-indigo-500">
+          <option value="">All Conditions</option>
+          <option value="New">New</option>
+          <option value="Used">Used</option>
+          <option value="Refurbished">Refurbished</option>
+        </select>
+        <button (click)="searchParts()" class="btn-secondary flex items-center gap-2 whitespace-nowrap">
+          <i class="fas fa-search"></i>
+          Search
+        </button>
+        <button (click)="loadParts()" class="btn-secondary flex items-center gap-2 whitespace-nowrap">
+          <i class="fas fa-sync-alt"></i>
+          Refresh
+        </button>
+      </div>
+    </div>
+
+    <!-- ===== LOADING ===== -->
+    <div *ngIf="isLoading" class="loading-spinner">
+      <div class="spinner"></div>
+    </div>
+
+    <!-- ===== PARTS GRID ===== -->
+    <div *ngIf="!isLoading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div *ngFor="let part of parts" class="glass-card rounded-2xl overflow-hidden border border-white/5 hover-lift">
+        <!-- Image -->
+        <div class="relative h-48 bg-slate-800">
+          <img 
+            [src]="getImageUrl(part.imgpath)" 
+            [alt]="part.name"
+            class="w-full h-full object-cover"
+            (error)="part.imgpath = ''"
+          >
+          <div class="absolute top-2 right-2 flex gap-2">
+            <button (click)="openEditModal(part)" class="w-8 h-8 rounded-full bg-blue-500/80 hover:bg-blue-500 text-white flex items-center justify-center transition-colors">
+              <i class="fas fa-edit text-sm"></i>
+            </button>
+            <button (click)="openDeleteModal(part)" class="w-8 h-8 rounded-full bg-red-500/80 hover:bg-red-500 text-white flex items-center justify-center transition-colors">
+              <i class="fas fa-trash text-sm"></i>
+            </button>
+          </div>
+          <div class="absolute bottom-2 left-2">
+            <span [class]="getConditionClass(part.condition)" class="px-3 py-1 rounded-full text-xs font-medium">
+              {{ part.condition || 'Unknown' }}
+            </span>
+          </div>
+          <div class="absolute bottom-2 right-2">
+            <span class="px-2 py-1 rounded-full text-xs font-medium bg-black/60 text-white">
+              Qty: {{ part.qty || 0 }}
+            </span>
+          </div>
+        </div>
+        
+        <!-- Details -->
+        <div class="p-4">
+          <h3 class="text-white font-semibold text-lg truncate">{{ part.name }}</h3>
+          <p class="text-slate-400 text-sm">For: {{ part.car || 'Generic' }}</p>
+          <div class="flex items-center justify-between mt-2">
+            <p class="text-amber-300 font-medium">{{ formatPrice(parsePrice(part.price)) }}</p>
+            <p class="text-slate-400 text-sm">Stock: {{ part.qty || 0 }}</p>
+          </div>
+          <p *ngIf="part.description" class="text-slate-400 text-xs mt-2 line-clamp-2">{{ part.description }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== EMPTY STATE ===== -->
+    <div *ngIf="!isLoading && parts.length === 0" class="text-center py-16">
+      <i class="fas fa-cogs text-6xl text-slate-600 mb-4"></i>
+      <h3 class="text-xl font-semibold text-slate-300">No Parts Found</h3>
+      <p class="text-slate-400">Click "Add New Part" to create your first listing.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ADD/EDIT MODAL ===== -->
+<div *ngIf="showAddModal || showEditModal" class="modal-overlay" (click)="closeAllModals()">
+  <div class="modal-content max-w-2xl" (click)="$event.stopPropagation()">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-2xl font-bold text-white">
+        {{ showAddModal ? 'Add New Part' : 'Edit Part' }}
+      </h2>
+      <button (click)="closeAllModals()" class="text-slate-400 hover:text-white text-2xl">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="max-h-[70vh] overflow-y-auto p-2">
+      <!-- ID -->
+      <div class="mb-3">
+        <label class="block text-sm font-medium text-slate-300 mb-1">Part ID</label>
+        <input [(ngModel)]="partForm.id" class="w-full bg-slate-800/50 rounded-lg px-4 py-2 border border-white/5 text-white outline-none" readonly>
+      </div>
+
+      <!-- Name -->
+      <div class="mb-3">
+        <label class="block text-sm font-medium text-slate-300 mb-1">Part Name *</label>
+        <input [(ngModel)]="partForm.name" class="w-full bg-slate-800/50 rounded-lg px-4 py-2 border border-white/5 text-white outline-none focus:border-indigo-500" placeholder="e.g., Performance Air Filter">
+      </div>
+
+      <!-- Car Compatibility -->
+      <div class="mb-3">
+        <label class="block text-sm font-medium text-slate-300 mb-1">Compatible Car *</label>
+        <input [(ngModel)]="partForm.car" class="w-full bg-slate-800/50 rounded-lg px-4 py-2 border border-white/5 text-white outline-none focus:border-indigo-500" placeholder="e.g., Hilux GR">
+      </div>
+
+      <!-- Condition -->
+      <div class="mb-3">
+        <label class="block text-sm font-medium text-slate-300 mb-1">Condition *</label>
+        <select [(ngModel)]="partForm.condition" class="w-full bg-slate-800/50 rounded-lg px-4 py-2 border border-white/5 text-white outline-none focus:border-indigo-500">
+          <option value="New">New</option>
+          <option value="Used">Used</option>
+          <option value="Refurbished">Refurbished</option>
+        </select>
+      </div>
+
+      <!-- Quantity -->
+      <div class="mb-3">
+        <label class="block text-sm font-medium text-slate-300 mb-1">Quantity *</label>
+        <input [(ngModel)]="partForm.qty" type="number" min="0" class="w-full bg-slate-800/50 rounded-lg px-4 py-2 border border-white/5 text-white outline-none focus:border-indigo-500" placeholder="e.g., 10">
+      </div>
+
+      <!-- Price -->
+      <div class="mb-3">
+        <label class="block text-sm font-medium text-slate-300 mb-1">Price (LKR) *</label>
+        <input [(ngModel)]="partForm.price" type="number" min="0" step="0.01" class="w-full bg-slate-800/50 rounded-lg px-4 py-2 border border-white/5 text-white outline-none focus:border-indigo-500" placeholder="e.g., 89.00">
+      </div>
+
+      <!-- Description -->
+      <div class="mb-3">
+        <label class="block text-sm font-medium text-slate-300 mb-1">Description</label>
+        <textarea [(ngModel)]="partForm.description" rows="3" class="w-full bg-slate-800/50 rounded-lg px-4 py-2 border border-white/5 text-white outline-none focus:border-indigo-500 resize-none" placeholder="Part description..."></textarea>
+      </div>
+
+      <!-- Image Upload -->
+      <div class="mb-3">
+        <label class="block text-sm font-medium text-slate-300 mb-1">Part Image</label>
+        <div class="flex flex-col md:flex-row gap-4">
+          <div class="flex-1">
+            <input type="file" (change)="onImageSelected($event)" accept="image/*" class="hidden" #imageInput>
+            <button (click)="imageInput.click()" class="w-full py-3 border-2 border-dashed border-white/10 rounded-lg hover:border-indigo-500 transition-colors">
+              <i class="fas fa-upload text-slate-400"></i>
+              <span class="block text-sm text-slate-400 mt-1">Upload Image</span>
+            </button>
+            <p *ngIf="selectedImageFile" class="text-xs text-green-400 mt-1">Selected: {{ selectedImageFile.name }}</p>
+          </div>
+          <div *ngIf="imagePreview" class="w-32 h-32 rounded-lg overflow-hidden bg-slate-800">
+            <img [src]="imagePreview" class="w-full h-full object-cover">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex gap-3 mt-4 pt-4 border-t border-white/5">
+      <button (click)="closeAllModals()" class="btn-secondary flex-1">Cancel</button>
+      <button (click)="showAddModal ? addPart() : updatePart()" 
+              class="btn-primary flex-1"
+              [disabled]="isLoading">
+        <i class="fas fa-spinner fa-spin mr-2" *ngIf="isLoading"></i>
+        {{ showAddModal ? 'Add Part' : 'Update Part' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== DELETE CONFIRMATION MODAL ===== -->
+<div *ngIf="showDeleteModal" class="modal-overlay" (click)="closeAllModals()">
+  <div class="modal-content max-w-md" (click)="$event.stopPropagation()">
+    <div class="text-center">
+      <div class="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
+        <i class="fas fa-exclamation-triangle text-red-400 text-3xl"></i>
+      </div>
+      <h2 class="text-2xl font-bold text-white mb-2">Delete Part</h2>
+      <p class="text-slate-400 mb-6">
+        Are you sure you want to delete <span class="text-white font-semibold">{{ selectedPart?.name }}</span>?<br>
+        This action cannot be undone.
+      </p>
+      <div class="flex gap-3">
+        <button (click)="closeAllModals()" class="btn-secondary flex-1">Cancel</button>
+        <button (click)="deletePart()" class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-medium flex-1 transition-colors">
+          <i class="fas fa-spinner fa-spin mr-2" *ngIf="isLoading"></i>
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
