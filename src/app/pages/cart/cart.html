@@ -1,1 +1,158 @@
-<p>cart works!</p>
+<div class="bg-[#0b1120] text-slate-200 font-sans antialiased min-h-screen p-4 md:p-6">
+  <div class="w-full max-w-7xl mx-auto">
+    
+    <!-- ===== HEADER ===== -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+      <div class="flex items-center gap-4">
+        <button (click)="goBack()" class="text-slate-400 hover:text-white transition-colors">
+          <i class="fas fa-arrow-left text-xl"></i>
+        </button>
+        <div>
+          <h1 class="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
+            <i class="fas fa-shopping-cart text-emerald-400"></i>
+            Your Shopping Cart
+          </h1>
+          <p class="text-slate-400 text-sm mt-1" *ngIf="!error">{{ cartItems.length }} item(s) in your cart</p>
+        </div>
+      </div>
+      <div class="flex gap-3">
+        <button (click)="clearCart()" 
+                *ngIf="cartItems.length > 0 && !error"
+                class="bg-red-500/20 hover:bg-red-500/30 text-red-400 px-4 py-2 rounded-lg border border-red-500/20 transition-colors flex items-center gap-2">
+          <i class="fas fa-trash"></i>
+          Clear Cart
+        </button>
+        <button (click)="goToParts()" class="btn-secondary flex items-center gap-2">
+          <i class="fas fa-arrow-left"></i>
+          Continue Shopping
+        </button>
+      </div>
+    </div>
+
+    <!-- ===== ERROR STATE ===== -->
+    <div *ngIf="error" class="text-center py-16">
+      <i class="fas fa-exclamation-triangle text-6xl text-red-400 mb-4"></i>
+      <h3 class="text-2xl font-semibold text-white">Error</h3>
+      <p class="text-slate-400 mt-2">{{ error }}</p>
+      <button (click)="goToParts()" class="btn-primary mt-4 inline-flex items-center gap-2">
+        <i class="fas fa-arrow-left"></i>
+        Go Back
+      </button>
+    </div>
+
+    <!-- ===== LOADING ===== -->
+    <div *ngIf="isLoading && !error" class="loading-spinner">
+      <div class="spinner"></div>
+    </div>
+
+    <!-- ===== CART ITEMS ===== -->
+    <div *ngIf="!isLoading && !error && cartItems.length > 0" class="space-y-4">
+      <!-- Cart Items List -->
+      <div *ngFor="let item of cartItems" class="glass-card rounded-2xl p-4 border border-white/5 hover-lift">
+        <div class="flex flex-col md:flex-row gap-4 items-start md:items-center">
+          <!-- Image -->
+          <div class="w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-slate-800">
+            <img 
+              [src]="getImageUrl(item.part_image)" 
+              [alt]="item.part_name"
+              class="w-full h-full object-cover"
+              (error)="item.part_image = ''"
+            >
+          </div>
+          
+          <!-- Details -->
+          <div class="flex-1 min-w-0">
+            <h3 class="text-white font-semibold text-lg truncate">{{ item.part_name }}</h3>
+            <p class="text-slate-400 text-sm">For: {{ item.part_car || 'Generic' }}</p>
+            <p class="text-amber-300 font-medium">{{ formatPrice(item.part_price) }}</p>
+            
+            <!-- Stock Info -->
+            <div class="flex items-center gap-2 mt-1">
+              <span class="text-xs" [class]="getStockColor(item)">
+                <i class="fas fa-circle text-[6px] mr-1 align-middle"></i>
+                {{ getStockStatus(item) }}
+              </span>
+              <span class="text-xs text-slate-500">| Available: {{ item.stock_qty || 0 }} units</span>
+            </div>
+          </div>
+          
+          <!-- Quantity Controls -->
+          <div class="flex items-center gap-3">
+            <div class="flex items-center gap-1 bg-slate-800/50 rounded-lg p-1">
+              <button 
+                (click)="decreaseItemQty(item)" 
+                class="w-8 h-8 rounded-lg hover:bg-slate-700 text-white flex items-center justify-center transition-colors"
+                [disabled]="item.qty <= 1 || isLoading"
+              >
+                <i class="fas fa-minus text-xs"></i>
+              </button>
+              <input 
+                type="number" 
+                [(ngModel)]="item.qty" 
+                (change)="validateQuantity(item)"
+                min="1" 
+                [max]="item.stock_qty || 99"
+                class="w-12 bg-transparent text-center text-white outline-none text-sm"
+                [disabled]="isLoading"
+              >
+              <button 
+                (click)="increaseItemQty(item)" 
+                class="w-8 h-8 rounded-lg hover:bg-slate-700 text-white flex items-center justify-center transition-colors"
+                [disabled]="item.qty >= (item.stock_qty || 99) || isLoading"
+              >
+                <i class="fas fa-plus text-xs"></i>
+              </button>
+            </div>
+            <span class="text-xs text-slate-500">Max: {{ item.stock_qty || 0 }}</span>
+          </div>
+          
+          <!-- Subtotal & Remove -->
+          <div class="flex flex-col items-end gap-2 min-w-[100px]">
+            <p class="text-white font-medium">{{ formatPrice(item.total || item.part_price * item.qty) }}</p>
+            <button 
+              (click)="removeItem(item)" 
+              class="text-red-400 hover:text-red-300 text-sm flex items-center gap-1 transition-colors"
+              [disabled]="isLoading"
+            >
+              <i class="fas fa-times"></i>
+              Remove
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cart Summary -->
+      <div class="glass-card rounded-2xl p-6 border border-white/5 mt-6">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <p class="text-slate-400 text-sm">Subtotal</p>
+            <p class="text-3xl font-bold text-white">{{ formatPrice(getCartTotal()) }}</p>
+            <p class="text-slate-400 text-sm mt-1">{{ cartItems.length }} item(s) in cart</p>
+          </div>
+          <div class="flex gap-3 w-full md:w-auto">
+            <button (click)="goToParts()" class="btn-secondary flex-1 md:flex-none">
+              Continue Shopping
+            </button>
+            <button (click)="checkout()" class="btn-primary flex-1 md:flex-none flex items-center gap-2">
+              <i class="fas fa-credit-card"></i>
+              Proceed to Checkout
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== EMPTY CART ===== -->
+    <div *ngIf="!isLoading && !error && cartItems.length === 0" class="text-center py-16">
+      <div class="text-6xl text-slate-600 mb-4">
+        <i class="fas fa-shopping-cart"></i>
+      </div>
+      <h3 class="text-2xl font-semibold text-slate-300">Your Cart is Empty</h3>
+      <p class="text-slate-400 mt-2">Browse our parts and add items you like!</p>
+      <button (click)="goToParts()" class="btn-primary mt-6 inline-flex items-center gap-2">
+        <i class="fas fa-cogs"></i>
+        Browse Parts
+      </button>
+    </div>
+  </div>
+</div>

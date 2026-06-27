@@ -3,6 +3,15 @@
     to { transform: rotate(360deg); }
 }
 
+.spinner {
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top: 3px solid #ec4899;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+}
+
 .animate-spin {
     animation: spin 1s linear infinite;
 }
@@ -141,4 +150,37 @@ img {
     .min-h-\[300px\] {
         min-height: 200px;
     }
+}
+
+/* Quantity input styles */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+/* Button disabled state */
+button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #ec4899, #db2777);
+    color: white;
+    padding: 0.5rem 1.5rem;
+    border-radius: 0.75rem;
+    border: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px -5px rgba(236, 72, 153, 0.4);
 }

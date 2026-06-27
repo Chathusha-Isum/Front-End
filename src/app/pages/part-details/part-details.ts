@@ -2,21 +2,28 @@ import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Router, ActivatedRoute } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-part-details',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './part-details.html',
   styleUrls: ['./part-details.css']
 })
-export class PartDetails implements OnInit{
+export class PartDetails implements OnInit {
   partData: any = null;
   loading = false;
   error = '';
   partId: string = '';
   apiUrl = 'http://localhost:8080';
   defaultImage = 'https://raw.githubusercontent.com/creativetimofficial/public-assets/master/ct-assets/mt-demo.jpg';
+  
+  // Cart related
+  public userId: string = '';
+  public quantity: number = 1;
+  public isAddingToCart: boolean = false;
 
   // Condition color mapping
   conditionColors: { [key: string]: string } = {
@@ -37,6 +44,22 @@ export class PartDetails implements OnInit{
   ) {}
 
   ngOnInit(): void {
+    // Get user ID from email
+    const email = localStorage.getItem('email');
+    if (email) {
+      this.http.get(`${this.apiUrl}/user/email?email=${email}`).subscribe({
+        next: (res: any) => {
+          if (res && res.bool && res.data) {
+            this.userId = res.data.id;
+            console.log('✅ User loaded:', this.userId);
+          }
+        },
+        error: (error: any) => {
+          console.error('Error loading user:', error);
+        }
+      });
+    }
+
     this.partId = localStorage.getItem('part') || '';
     
     // Also check route params
@@ -64,13 +87,136 @@ export class PartDetails implements OnInit{
         this.loading = false;
         this.cdr.detectChanges();
       },
-      error: (err) => {
+      error: (err: any) => {
         this.error = err.error?.message || 'Failed to load part details';
         this.loading = false;
         console.error('Error fetching part:', err);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: this.error,
+          confirmButtonColor: '#ec4899'
+        });
       }
     });
   }
+
+  // ==================== CART FUNCTIONS ====================
+
+  increaseQuantity(): void {
+    if (this.quantity < (this.partData?.qty || 99)) {
+      this.quantity++;
+    }
+  }
+
+  decreaseQuantity(): void {
+    if (this.quantity > 1) {
+      this.quantity--;
+    }
+  }
+
+  validateQuantity(): void {
+    if (this.quantity < 1) {
+      this.quantity = 1;
+    } else if (this.quantity > (this.partData?.qty || 99)) {
+      this.quantity = this.partData?.qty || 1;
+      Swal.fire({
+        icon: 'warning',
+        title: 'Stock Limit Reached',
+        text: `Only ${this.partData?.qty} units available in stock!`,
+        confirmButtonColor: '#f59e0b'
+      });
+    }
+  }
+
+  addToCart(): void {
+    if (!this.partData) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Part data not available!',
+        confirmButtonColor: '#ec4899'
+      });
+      return;
+    }
+
+    if (!this.userId) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Login Required',
+        text: 'Please login to add items to cart.',
+        confirmButtonColor: '#f59e0b'
+      }).then(() => {
+        this.router.navigate(['/login']);
+      });
+      return;
+    }
+
+    if (this.partData.qty <= 0) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Out of Stock',
+        text: 'This part is currently out of stock!',
+        confirmButtonColor: '#ef4444'
+      });
+      return;
+    }
+
+    if (this.quantity > this.partData.qty) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Stock Limit Reached',
+        text: `Only ${this.partData.qty} units available in stock!`,
+        confirmButtonColor: '#f59e0b'
+      });
+      return;
+    }
+
+    const total = this.partData.price * this.quantity;
+    this.isAddingToCart = true;
+
+    const cartData = {
+      userId: this.userId,
+      part: this.partData.id,
+      qty: this.quantity,
+      total: total
+    };
+
+    this.http.post(`${this.apiUrl}/cart/add`, cartData).subscribe({
+      next: (res: any) => {
+        console.log('✅ Added to cart:', res);
+        this.isAddingToCart = false;
+        this.cdr.detectChanges();
+        Swal.fire({
+          icon: 'success',
+          title: 'Added to Cart!',
+          text: `${this.quantity} x ${this.partData.name} added to your cart.`,
+          timer: 2000,
+          showConfirmButton: false,
+          toast: true,
+          position: 'top-end'
+        });
+      },
+      error: (error: any) => {
+        console.error('Error adding to cart:', error);
+        this.isAddingToCart = false;
+        this.cdr.detectChanges();
+        const message = error.error?.message || 'Failed to add item to cart. Please try again.';
+        Swal.fire({
+          icon: 'error',
+          title: 'Failed to Add',
+          text: message,
+          confirmButtonColor: '#ec4899'
+        });
+      }
+    });
+  }
+
+  goToCart(): void {
+    this.router.navigate(['/cart']);
+  }
+
+  // ==================== UTILITY FUNCTIONS ====================
 
   getImageUrl(imgpath: string): string {
     if (!imgpath) return this.defaultImage;
@@ -94,12 +240,6 @@ export class PartDetails implements OnInit{
 
   goBack(): void {
     this.router.navigate(['/parts']);
-  }
-
-  addToCart(): void {
-    // Add to cart functionality
-    // console.log('Adding to cart:', this.partData);
-    // You can implement cart logic here
   }
 
   getStockStatus(qty: number): string {

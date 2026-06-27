@@ -39,7 +39,6 @@ export class EditProfile implements OnInit {
 
   private apiUrl = 'http://localhost:8080';
   private userEmail: string = '';
-  image: string = "uploads/profiles/"+this.selectedProfilePic;
 
   constructor(
     private http: HttpClient,
@@ -50,7 +49,14 @@ export class EditProfile implements OnInit {
   ngOnInit(): void {
     this.userEmail = localStorage.getItem('email') || '';
     if (!this.userEmail) {
-      this.router.navigate(['/login']);
+      Swal.fire({
+        icon: 'warning',
+        title: 'Login Required',
+        text: 'Please login to access your profile.',
+        confirmButtonText: 'OK'
+      }).then(() => {
+        this.router.navigate(['/login']);
+      });
       return;
     }
     this.fetchUserData();
@@ -69,6 +75,12 @@ export class EditProfile implements OnInit {
       error: (err) => {
         this.error = err.error?.message || 'Failed to load user data';
         this.loading = false;
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: this.error,
+          confirmButtonText: 'OK'
+        });
         this.cdr.detectChanges();
       }
     });
@@ -79,14 +91,11 @@ export class EditProfile implements OnInit {
       return this.profilePicPreview;
     }
     if (this.userData?.profile_pic) {
-      // Check if it's already a full URL
       if (this.userData.profile_pic.startsWith('http')) {
         return this.userData.profile_pic;
       }
-      // Use the images API endpoint for profiles
       return `${this.apiUrl}/api/images/profiles/${this.userData.profile_pic}`;
     }
-    // Generate avatar from name
     const name = `${this.userData?.fname || 'U'} ${this.userData?.lname || 'ser'}`;
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=128&background=6366f1&color=fff&bold=true&font-size=0.5`;
   }
@@ -97,12 +106,10 @@ export class EditProfile implements OnInit {
       const validTypes = ['image/png', 'image/jpg', 'image/jpeg', 'image/webp', 'image/gif'];
       if (!validTypes.includes(file.type)) {
         Swal.fire({
-          title: 'Invalid file type',
-          text: 'Please upload PNG, JPG, JPEG, WEBP, or GIF images only',
           icon: 'error',
-          confirmButtonText: 'OK',
-          background: '#1e293b',
-          color: '#e2e8f0'
+          title: 'Invalid File Type',
+          text: 'Please upload PNG, JPG, JPEG, WEBP, or GIF images only',
+          confirmButtonText: 'OK'
         });
         event.target.value = '';
         return;
@@ -110,12 +117,10 @@ export class EditProfile implements OnInit {
 
       if (file.size > 10 * 1024 * 1024) {
         Swal.fire({
-          title: 'File too large',
-          text: 'Profile picture must be less than 10MB',
           icon: 'error',
-          confirmButtonText: 'OK',
-          background: '#1e293b',
-          color: '#e2e8f0'
+          title: 'File Too Large',
+          text: 'Profile picture must be less than 10MB',
+          confirmButtonText: 'OK'
         });
         event.target.value = '';
         return;
@@ -132,7 +137,45 @@ export class EditProfile implements OnInit {
     }
   }
 
-  // Upload profile image to server
+  validateForm(): boolean {
+    const errors: string[] = [];
+
+    if (!this.userData.fname || this.userData.fname.trim() === '') {
+      errors.push('First Name is required.');
+    }
+    if (!this.userData.lname || this.userData.lname.trim() === '') {
+      errors.push('Last Name is required.');
+    }
+    if (!this.userData.contact || this.userData.contact.trim() === '') {
+      errors.push('Contact number is required.');
+    } else if (!/^[0-9+\-\s()]+$/.test(this.userData.contact)) {
+      errors.push('Please enter a valid contact number.');
+    }
+
+    // Password validation
+    if (this.newPassword || this.confirmPassword) {
+      if (this.newPassword !== this.confirmPassword) {
+        errors.push('Passwords do not match.');
+      }
+      if (this.newPassword.length < 6) {
+        errors.push('New password must be at least 6 characters.');
+      }
+    }
+
+    if (errors.length > 0) {
+      const errorMessage = errors.map(err => `• ${err}`).join('\n');
+      Swal.fire({
+        icon: 'warning',
+        title: 'Validation Errors',
+        text: errorMessage,
+        confirmButtonText: 'OK, Fix Issues'
+      });
+      return false;
+    }
+
+    return true;
+  }
+
   uploadProfileImage(): Promise<string> {
     return new Promise((resolve, reject) => {
       if (!this.selectedProfilePic) {
@@ -144,7 +187,6 @@ export class EditProfile implements OnInit {
       const formData = new FormData();
       formData.append('imageFile', this.selectedProfilePic);
 
-      // Upload using the profile upload endpoint
       this.http.post(`${this.apiUrl}/api/images/profiles/upload`, formData).subscribe({
         next: (res: any) => {
           this.isUploadingImage = false;
@@ -165,82 +207,55 @@ export class EditProfile implements OnInit {
   onSubmit(): void {
     if (this.isSubmitting) return;
 
-    // Validate form
-    if (!this.userData.fname || !this.userData.lname || !this.userData.contact) {
-      this.errorMessage = 'Please fill in all required fields';
-      Swal.fire({
-        title: 'Validation Error',
-        text: 'Please fill in all required fields',
-        icon: 'error',
-        confirmButtonText: 'OK',
-        background: '#1e293b',
-        color: '#e2e8f0'
-      });
+    if (!this.validateForm()) {
       return;
     }
 
-    // Validate password match if changing password
-    if (this.newPassword || this.confirmPassword) {
-      if (this.newPassword !== this.confirmPassword) {
-        this.errorMessage = 'Passwords do not match';
-        Swal.fire({
-          title: 'Error',
-          text: 'Passwords do not match',
-          icon: 'error',
-          confirmButtonText: 'OK',
-          background: '#1e293b',
-          color: '#e2e8f0'
-        });
+    // Confirm update
+    Swal.fire({
+      icon: 'question',
+      title: 'Update Profile?',
+      text: 'Are you sure you want to update your profile?',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Update',
+      cancelButtonText: 'Cancel'
+    }).then((result) => {
+      if (!result.isConfirmed) {
         return;
       }
-      if (this.newPassword.length < 6) {
-        this.errorMessage = 'Password must be at least 6 characters';
+
+      this.isSubmitting = true;
+      this.errorMessage = '';
+      this.successMessage = '';
+
+      // First upload the profile image if selected
+      this.uploadProfileImage().then((filename) => {
+        if (filename) {
+          this.userData.profile_pic = filename;
+        }
+        this.updateUserProfile();
+      }).catch((error) => {
+        this.isSubmitting = false;
+        this.errorMessage = error;
         Swal.fire({
-          title: 'Error',
-          text: 'Password must be at least 6 characters',
           icon: 'error',
-          confirmButtonText: 'OK',
-          background: '#1e293b',
-          color: '#e2e8f0'
+          title: 'Upload Failed',
+          text: error,
+          confirmButtonText: 'OK'
         });
-        return;
-      }
-    }
-
-    this.isSubmitting = true;
-    this.errorMessage = '';
-    this.successMessage = '';
-
-    // First upload the profile image if selected
-    this.uploadProfileImage().then((filename) => {
-      // If image uploaded successfully, update the user data
-      if (filename) {
-        this.userData.profile_pic = filename;
-      }
-      this.updateUserProfile();
-    }).catch((error) => {
-      this.isSubmitting = false;
-      this.errorMessage = error;
-      Swal.fire({
-        title: 'Error',
-        text: error,
-        icon: 'error',
-        confirmButtonText: 'OK',
-        background: '#1e293b',
-        color: '#e2e8f0'
       });
     });
   }
 
   updateUserProfile(): void {
-
     this.http.put(`${this.apiUrl}/user/id?id=${this.userData.id}`, this.userData).subscribe({
       next: (res: any) => {
         this.isSubmitting = false;
         this.successMessage = res.message || 'Profile updated successfully!';
 
-        // Update local storage user data
+        // Update local storage
         localStorage.setItem('email', this.userData.email);
+        localStorage.setItem('userData', JSON.stringify(this.userData));
 
         // Reset password fields
         this.newPassword = '';
@@ -249,15 +264,16 @@ export class EditProfile implements OnInit {
         this.profilePicPreview = null;
 
         Swal.fire({
-          title: 'Success!',
-          text: 'Your profile has been updated successfully.',
           icon: 'success',
-          confirmButtonText: 'OK',
-          background: '#1e293b',
-          color: '#e2e8f0'
+          title: 'Profile Updated!',
+          text: 'Your profile has been updated successfully.',
+          timer: 2000,
+          showConfirmButton: false,
+          toast: true,
+          position: 'top-end'
         });
 
-        // Refresh user data to show updated profile
+        // Refresh user data
         this.fetchUserData();
 
         setTimeout(() => {
@@ -268,35 +284,29 @@ export class EditProfile implements OnInit {
         this.isSubmitting = false;
         this.errorMessage = err.error?.message || 'Failed to update profile. Please try again.';
         Swal.fire({
-          title: 'Error',
-          text: this.errorMessage,
           icon: 'error',
-          confirmButtonText: 'OK',
-          background: '#1e293b',
-          color: '#e2e8f0'
+          title: 'Update Failed',
+          text: this.errorMessage,
+          confirmButtonText: 'OK'
         });
         this.cdr.detectChanges();
       }
     });
   }
 
-  // Remove profile picture
   removeProfilePicture(): void {
     if (!this.userData.profile_pic) {
       return;
     }
 
     Swal.fire({
+      icon: 'warning',
       title: 'Remove Profile Picture?',
       text: 'Are you sure you want to remove your profile picture?',
-      icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'Yes, remove it',
       cancelButtonText: 'Cancel',
-      background: '#1e293b',
-      color: '#e2e8f0',
-      confirmButtonColor: '#6366f1',
-      cancelButtonColor: '#ef4444'
+      confirmButtonColor: '#d33'
     }).then((result) => {
       if (result.isConfirmed) {
         this.isSubmitting = true;
@@ -309,23 +319,22 @@ export class EditProfile implements OnInit {
             this.fetchUserData();
 
             Swal.fire({
+              icon: 'success',
               title: 'Removed!',
               text: 'Profile picture has been removed.',
-              icon: 'success',
-              confirmButtonText: 'OK',
-              background: '#1e293b',
-              color: '#e2e8f0'
+              timer: 1500,
+              showConfirmButton: false,
+              toast: true,
+              position: 'top-end'
             });
           },
           error: (err) => {
             this.isSubmitting = false;
             Swal.fire({
+              icon: 'error',
               title: 'Error',
               text: err.error?.error || 'Failed to remove profile picture',
-              icon: 'error',
-              confirmButtonText: 'OK',
-              background: '#1e293b',
-              color: '#e2e8f0'
+              confirmButtonText: 'OK'
             });
           }
         });
@@ -336,12 +345,10 @@ export class EditProfile implements OnInit {
   goBack(): void {
     if (this.isSubmitting) {
       Swal.fire({
-        title: 'Changes in progress',
-        text: 'Please wait for the current operation to complete',
         icon: 'warning',
-        confirmButtonText: 'OK',
-        background: '#1e293b',
-        color: '#e2e8f0'
+        title: 'Changes in Progress',
+        text: 'Please wait for the current operation to complete',
+        confirmButtonText: 'OK'
       });
       return;
     }

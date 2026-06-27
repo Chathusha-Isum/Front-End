@@ -4,6 +4,7 @@ import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-manage-cars',
@@ -102,6 +103,7 @@ export class ManageCars implements OnInit, OnDestroy {
       error: (error: any) => {
         console.error('Error loading cars:', error);
         this.isLoading = false;
+        Swal.fire('Error', 'Failed to load cars. Please try again.', 'error');
         this.cdr.detectChanges();
       }
     });
@@ -125,6 +127,7 @@ export class ManageCars implements OnInit, OnDestroy {
       error: (error: any) => {
         console.error('Error searching cars:', error);
         this.isLoading = false;
+        Swal.fire('Error', 'Failed to search cars. Please try again.', 'error');
         this.cdr.detectChanges();
       }
     });
@@ -220,7 +223,6 @@ export class ManageCars implements OnInit, OnDestroy {
     this.http.get(`${this.apiUrl}/product/getimages?id=${carId}`).subscribe({
       next: (response: any) => {
         if (response && response.data) {
-          // Filter out the main image from additional images
           const allImages: string[] = Array.isArray(response.data) ? response.data : [response.data];
           const mainImage: string = this.carForm.imgpath || this.uploadedMainImagePath;
           this.additionalImages = allImages.filter((img: string) => img !== mainImage);
@@ -262,6 +264,22 @@ export class ManageCars implements OnInit, OnDestroy {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       const file: File = input.files[0];
+      
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        Swal.fire('File Too Large', 'Image size exceeds 10MB limit. Please choose a smaller image.', 'warning');
+        input.value = '';
+        return;
+      }
+      
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        Swal.fire('Invalid File Type', 'Please upload JPEG, PNG, WEBP images only.', 'warning');
+        input.value = '';
+        return;
+      }
+      
       this.selectedMainImageFile = file;
 
       if (this.mainImagePreview) {
@@ -275,14 +293,34 @@ export class ManageCars implements OnInit, OnDestroy {
   onAdditionalImagesSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
-      // Add new files to the existing list
+      // Check total files limit (max 10 additional images)
+      const totalFiles = this.selectedAdditionalImageFiles.length + input.files.length;
+      if (totalFiles > 10) {
+        Swal.fire('Too Many Files', 'You can upload a maximum of 10 additional images.', 'warning');
+        input.value = '';
+        return;
+      }
+      
       for (let i = 0; i < input.files.length; i++) {
         const file: File = input.files[i];
+        
+        // Validate file size
+        if (file.size > 10 * 1024 * 1024) {
+          Swal.fire('File Too Large', `Image "${file.name}" exceeds 10MB limit.`, 'warning');
+          continue;
+        }
+        
+        // Validate file type
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+          Swal.fire('Invalid File Type', `Invalid file type for "${file.name}". Please upload JPEG, PNG, WEBP images only.`, 'warning');
+          continue;
+        }
+        
         // Check if file already exists in the list
         const exists: boolean = this.selectedAdditionalImageFiles.some((f: File) => f.name === file.name && f.size === file.size);
         if (!exists) {
           this.selectedAdditionalImageFiles.push(file);
-          // Create preview
           const preview: string = URL.createObjectURL(file);
           this.additionalImagePreviews.push(preview);
         }
@@ -292,20 +330,13 @@ export class ManageCars implements OnInit, OnDestroy {
   }
 
   removeAdditionalImage(index: number): void {
-    // If it's an existing image (from backend)
     if (typeof this.additionalImages[index] === 'string' && this.additionalImages[index].startsWith('/uploads/')) {
-      const imagePath: string = this.additionalImages[index];
-      // Remove from additional images array
       this.additionalImages.splice(index, 1);
-      // Also remove from previews if it exists
       if (this.additionalImagePreviews[index]) {
         URL.revokeObjectURL(this.additionalImagePreviews[index]);
         this.additionalImagePreviews.splice(index, 1);
       }
-    } 
-    // If it's a newly uploaded file
-    else if (this.selectedAdditionalImageFiles[index]) {
-      // Revoke the object URL
+    } else if (this.selectedAdditionalImageFiles[index]) {
       if (this.additionalImagePreviews[index]) {
         URL.revokeObjectURL(this.additionalImagePreviews[index]);
       }
@@ -318,7 +349,25 @@ export class ManageCars implements OnInit, OnDestroy {
   onModelSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
-      this.selectedModelFile = input.files[0];
+      const file: File = input.files[0];
+      
+      // Validate file size (max 50MB for 3D models)
+      if (file.size > 50 * 1024 * 1024) {
+        Swal.fire('File Too Large', 'Model file exceeds 50MB limit. Please choose a smaller file.', 'warning');
+        input.value = '';
+        return;
+      }
+      
+      // Validate file type
+      const allowedTypes = ['.glb', '.gltf', '.fbx', '.obj'];
+      const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
+      if (!allowedTypes.includes(fileExtension)) {
+        Swal.fire('Invalid File Type', 'Please upload GLB, GLTF, FBX, or OBJ files only.', 'warning');
+        input.value = '';
+        return;
+      }
+      
+      this.selectedModelFile = file;
       this.cdr.detectChanges();
     }
   }
@@ -387,10 +436,119 @@ export class ManageCars implements OnInit, OnDestroy {
     return typeof price === 'string' ? parseFloat(price) : price;
   }
 
+  // ==================== VALIDATION ====================
+
+  validateForm(): boolean {
+    const errors: string[] = [];
+
+    // Required fields validation
+    const requiredFields = [
+      { field: 'name', label: 'Car Name' },
+      { field: 'brand', label: 'Brand' },
+      { field: 'price', label: 'Price' },
+      { field: 'productionyear', label: 'Production Year' }
+    ];
+
+    for (const req of requiredFields) {
+      if (!this.carForm[req.field] || this.carForm[req.field].toString().trim() === '') {
+        errors.push(`${req.label} is required.`);
+      }
+    }
+
+    // Price validation
+    if (this.carForm.price) {
+      const price = parseFloat(this.carForm.price);
+      if (isNaN(price) || price <= 0) {
+        errors.push('Price must be a valid positive number.');
+      }
+      if (price > 999999999) {
+        errors.push('Price cannot exceed 999,999,999.');
+      }
+    }
+
+    // Production year validation
+    if (this.carForm.productionyear) {
+      const year = parseInt(this.carForm.productionyear);
+      const currentYear = new Date().getFullYear();
+      if (isNaN(year) || year < 1900 || year > currentYear + 1) {
+        errors.push(`Production year must be between 1900 and ${currentYear + 1}.`);
+      }
+    }
+
+    // Mileage validation
+    if (this.carForm.mileage) {
+      const mileage = parseInt(this.carForm.mileage);
+      if (isNaN(mileage) || mileage < 0) {
+        errors.push('Mileage must be a valid non-negative number.');
+      }
+      if (mileage > 9999999) {
+        errors.push('Mileage cannot exceed 9,999,999.');
+      }
+    }
+
+    // Horsepower validation
+    if (this.carForm.horsepower) {
+      const hp = parseInt(this.carForm.horsepower);
+      if (isNaN(hp) || hp < 0) {
+        errors.push('Horsepower must be a valid non-negative number.');
+      }
+      if (hp > 5000) {
+        errors.push('Horsepower cannot exceed 5000.');
+      }
+    }
+
+    // Engine capacity validation
+    if (this.carForm.enginecapacity) {
+      const engine = parseFloat(this.carForm.enginecapacity);
+      if (isNaN(engine) || engine < 0) {
+        errors.push('Engine capacity must be a valid non-negative number.');
+      }
+      if (engine > 20) {
+        errors.push('Engine capacity cannot exceed 20.0L.');
+      }
+    }
+
+    // Colors validation
+    if (this.colors.length === 0) {
+      errors.push('Please add at least one color.');
+    }
+
+    // If there are errors, show them in SweetAlert
+    if (errors.length > 0) {
+      const errorMessage = errors.map(err => `• ${err}`).join('\n');
+      Swal.fire({
+        icon: 'warning',
+        title: 'Validation Errors',
+        text: errorMessage,
+        confirmButtonText: 'OK, Fix Issues'
+      });
+      return false;
+    }
+
+    return true;
+  }
+
   // ==================== CRUD OPERATIONS ====================
 
   async addCar(): Promise<void> {
-    if (!this.validateForm()) return;
+    // Validate form before proceeding
+    if (!this.validateForm()) {
+      return;
+    }
+
+    // Confirm before adding
+    const confirmResult = await Swal.fire({
+      icon: 'question',
+      title: 'Add New Car',
+      text: `Are you sure you want to add "${this.carForm.name}"?`,
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Add Car',
+      cancelButtonText: 'Cancel'
+    });
+
+    if (!confirmResult.isConfirmed) {
+      return;
+    }
 
     this.isLoading = true;
     this.imageUploading = true;
@@ -449,29 +607,56 @@ export class ManageCars implements OnInit, OnDestroy {
           this.closeAllModals();
           this.loadCars();
           this.cdr.detectChanges();
+          
+          Swal.fire({
+            icon: 'success',
+            title: 'Car Added!',
+            text: `${this.carForm.name} has been added successfully.`,
+            timer: 2000,
+            showConfirmButton: false,
+            toast: true,
+            position: 'top-end'
+          });
         },
         error: (error: any) => {
           console.error('Error adding car:', error);
-          alert('Failed to add car. Please try again.');
           this.imageUploading = false;
           this.modelUploading = false;
           this.isLoading = false;
           this.cdr.detectChanges();
+          Swal.fire('Error', error.error?.message || 'Failed to add car. Please try again.', 'error');
         }
       });
 
     } catch (error) {
       console.error('Error in upload process:', error);
-      alert('Failed to upload files. Please try again.');
       this.imageUploading = false;
       this.modelUploading = false;
       this.isLoading = false;
       this.cdr.detectChanges();
+      Swal.fire('Error', 'Failed to upload files. Please try again.', 'error');
     }
   }
 
   async updateCar(): Promise<void> {
-    if (!this.validateForm()) return;
+    // Validate form before proceeding
+    if (!this.validateForm()) {
+      return;
+    }
+
+    // Confirm before updating
+    const confirmResult = await Swal.fire({
+      icon: 'question',
+      title: 'Update Car',
+      text: `Are you sure you want to update "${this.carForm.name}"?`,
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Update Car',
+      cancelButtonText: 'Cancel'
+    });
+
+    if (!confirmResult.isConfirmed) {
+      return;
+    }
 
     this.isLoading = true;
     this.imageUploading = true;
@@ -529,68 +714,88 @@ export class ManageCars implements OnInit, OnDestroy {
           this.closeAllModals();
           this.loadCars();
           this.cdr.detectChanges();
+          
+          Swal.fire({
+            icon: 'success',
+            title: 'Car Updated!',
+            text: `${this.carForm.name} has been updated successfully.`,
+            timer: 2000,
+            showConfirmButton: false,
+            toast: true,
+            position: 'top-end'
+          });
         },
         error: (error: any) => {
           console.error('Error updating car:', error);
-          alert('Failed to update car. Please try again.');
           this.imageUploading = false;
           this.modelUploading = false;
           this.isLoading = false;
           this.cdr.detectChanges();
+          Swal.fire('Error', error.error?.message || 'Failed to update car. Please try again.', 'error');
         }
       });
 
     } catch (error) {
       console.error('Error in upload process:', error);
-      alert('Failed to upload files. Please try again.');
       this.imageUploading = false;
       this.modelUploading = false;
       this.isLoading = false;
       this.cdr.detectChanges();
+      Swal.fire('Error', 'Failed to upload files. Please try again.', 'error');
     }
   }
 
   deleteCar(): void {
     if (!this.selectedCar) return;
 
-    this.isLoading = true;
+    Swal.fire({
+      icon: 'warning',
+      title: 'Delete Car',
+      text: `Are you sure you want to delete "${this.selectedCar.name}"? This action cannot be undone!`,
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Delete',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#d33'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.isLoading = true;
 
-    // Extract filenames from paths
-    const modelFilename: string = this.selectedCar.modelpath ? this.selectedCar.modelpath.split('/').pop() : '';
-    const imageFilename: string = this.selectedCar.imgpath ? this.selectedCar.imgpath.split('/').pop() : '';
+        // Extract filenames from paths
+        const modelFilename: string = this.selectedCar.modelpath ? this.selectedCar.modelpath.split('/').pop() : '';
+        const imageFilename: string = this.selectedCar.imgpath ? this.selectedCar.imgpath.split('/').pop() : '';
 
-    // Delete model and image files
-    const deleteRequests = [];
+        // Delete model and image files
+        const deleteRequests = [];
 
-    if (modelFilename) {
-      deleteRequests.push(
-        this.http.delete(`${this.apiUrl}/api/models/cars/${modelFilename}`)
-      );
-    }
+        if (modelFilename) {
+          deleteRequests.push(
+            this.http.delete(`${this.apiUrl}/api/models/cars/${modelFilename}`)
+          );
+        }
 
-    if (imageFilename) {
-      deleteRequests.push(
-        this.http.delete(`${this.apiUrl}/api/images/cars/${imageFilename}`)
-      );
-    }
+        if (imageFilename) {
+          deleteRequests.push(
+            this.http.delete(`${this.apiUrl}/api/images/cars/${imageFilename}`)
+          );
+        }
 
-    // Execute all delete requests in parallel
-    if (deleteRequests.length > 0) {
-      forkJoin(deleteRequests).subscribe({
-        next: (results: any[]) => {
-          console.log('✅ Files deleted successfully');
-          // Now delete the car from database
-          this.deleteCarFromDatabase();
-        },
-        error: (error: any) => {
-          console.error('Error deleting files:', error);
-          // Still try to delete the car from database
+        // Execute all delete requests in parallel
+        if (deleteRequests.length > 0) {
+          forkJoin(deleteRequests).subscribe({
+            next: (results: any[]) => {
+              console.log('✅ Files deleted successfully');
+              this.deleteCarFromDatabase();
+            },
+            error: (error: any) => {
+              console.error('Error deleting files:', error);
+              this.deleteCarFromDatabase();
+            }
+          });
+        } else {
           this.deleteCarFromDatabase();
         }
-      });
-    } else {
-      this.deleteCarFromDatabase();
-    }
+      }
+    });
   }
 
   private deleteCarFromDatabase(): void {
@@ -601,27 +806,23 @@ export class ManageCars implements OnInit, OnDestroy {
         this.closeAllModals();
         this.loadCars();
         this.cdr.detectChanges();
+        Swal.fire({
+          icon: 'success',
+          title: 'Car Deleted!',
+          text: `${this.selectedCar.name} has been deleted successfully.`,
+          timer: 2000,
+          showConfirmButton: false,
+          toast: true,
+          position: 'top-end'
+        });
       },
       error: (error: any) => {
         console.error('Error deleting car:', error);
-        alert('Failed to delete car. Please try again.');
         this.isLoading = false;
         this.cdr.detectChanges();
+        Swal.fire('Error', 'Failed to delete car. Please try again.', 'error');
       }
     });
-  }
-
-  // ==================== VALIDATION ====================
-
-  validateForm(): boolean {
-    const required: string[] = ['name', 'brand', 'price', 'productionyear'];
-    for (const field of required) {
-      if (!this.carForm[field]) {
-        alert(`Please fill in the ${field.replace(/([A-Z])/g, ' $1').toLowerCase()} field.`);
-        return false;
-      }
-    }
-    return true;
   }
 
   // ==================== UTILITY ====================
