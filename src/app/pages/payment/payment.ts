@@ -5,8 +5,8 @@ import { HttpClient } from '@angular/common/http';
 import { Router, ActivatedRoute } from '@angular/router';
 import Swal from 'sweetalert2';
 
-declare var Stripe: any;
-declare var StripeElements: any;
+// Declare Stripe globally
+declare const Stripe: any;
 
 @Component({
   selector: 'app-payment',
@@ -30,16 +30,20 @@ export class Payment implements OnInit, AfterViewInit, OnDestroy {
   public isLoading: boolean = true;
   public isProcessing: boolean = false;
   public isStripeLoaded: boolean = false;
+  public userId: string = '';
+  public showTestCardInfo: boolean = true;
   
+  // Test Card Info
+  public testCard = {
+    number: '4242 4242 4242 4242',
+    expiry: '12/25',
+    cvv: '123'
+  };
+
   // Stripe Elements
   private stripe: any;
   private elements: any;
   private cardElement: any;
-  private cardErrors: any;
-  
-  // Payment History
-  public paymentHistory: any[] = [];
-  public userId: string = '';
 
   @ViewChild('cardElement') cardElementRef!: ElementRef;
   @ViewChild('cardErrors') cardErrorsRef!: ElementRef;
@@ -58,7 +62,6 @@ export class Payment implements OnInit, AfterViewInit, OnDestroy {
         next: (res: any) => {
           if (res && res.bool && res.data) {
             this.userId = res.data.id;
-            this.loadPaymentHistory();
           }
         },
         error: () => {
@@ -79,18 +82,25 @@ export class Payment implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
-    // Initialize Stripe after view is ready
+    // Initialize Stripe after view is ready and config is loaded
     setTimeout(() => {
-      if (this.stripePublicKey) {
+      if (this.stripePublicKey && !this.isTesting) {
         this.initStripe();
+      } else if (this.isTesting) {
+        this.isLoading = false;
+        this.isStripeLoaded = true;
       }
-    }, 500);
+    }, 1000);
   }
 
   ngOnDestroy(): void {
     // Clean up Stripe elements
     if (this.cardElement) {
-      this.cardElement.destroy();
+      try {
+        this.cardElement.destroy();
+      } catch (e) {
+        // Ignore destroy errors
+      }
     }
     if (this.elements) {
       this.elements = null;
@@ -129,8 +139,14 @@ export class Payment implements OnInit, AfterViewInit, OnDestroy {
     // If still no data, show error
     if (!this.paymentData) {
       this.isLoading = false;
-      Swal.fire('Error', 'No payment data found. Please try again.', 'error');
-      this.router.navigate(['/']);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No payment data found. Please try again.',
+        confirmButtonText: 'OK'
+      }).then(() => {
+        this.router.navigate(['/']);
+      });
     }
   }
 
@@ -141,14 +157,26 @@ export class Payment implements OnInit, AfterViewInit, OnDestroy {
           this.isTesting = res.data.isTesting;
           this.stripePublicKey = res.data.stripePublicKey;
           
-          // Load Stripe script
-          this.loadStripeScript();
+          if (!this.isTesting) {
+            // Load Stripe script only for live mode
+            this.loadStripeScript();
+          } else {
+            // In test mode, show test card info
+            this.showTestCardInfo = true;
+            this.isLoading = false;
+            this.isStripeLoaded = true;
+          }
         } else {
           console.error('Failed to load Stripe config');
+          this.isLoading = false;
         }
       },
       error: (error) => {
         console.error('Error loading Stripe config:', error);
+        // If config fails, default to test mode
+        this.isTesting = true;
+        this.isLoading = false;
+        this.isStripeLoaded = true;
       }
     });
   }
@@ -169,18 +197,27 @@ export class Payment implements OnInit, AfterViewInit, OnDestroy {
     };
     script.onerror = () => {
       console.error('Failed to load Stripe script');
-      Swal.fire('Error', 'Failed to load payment system. Please try again.', 'error');
+      this.isLoading = false;
+      this.isStripeLoaded = true; // Allow test mode fallback
+      Swal.fire({
+        icon: 'warning',
+        title: 'Payment System',
+        text: 'Stripe failed to load. Please use test mode or try again.',
+        confirmButtonText: 'OK'
+      });
     };
     document.head.appendChild(script);
   }
 
   initStripe(): void {
-    if (typeof Stripe === 'undefined' || !this.stripePublicKey) {
-      console.warn('Stripe not available');
-      return;
-    }
-
     try {
+      if (typeof Stripe === 'undefined' || !this.stripePublicKey) {
+        console.warn('Stripe not available');
+        this.isLoading = false;
+        this.isStripeLoaded = true;
+        return;
+      }
+
       this.stripe = new Stripe(this.stripePublicKey);
       this.elements = this.stripe.elements();
 
@@ -207,6 +244,7 @@ export class Payment implements OnInit, AfterViewInit, OnDestroy {
       if (mountElement) {
         this.cardElement.mount('#card-element');
         this.isStripeLoaded = true;
+        this.isLoading = false;
       }
 
       // Handle card errors
@@ -221,31 +259,11 @@ export class Payment implements OnInit, AfterViewInit, OnDestroy {
         }
       });
 
-      this.isStripeLoaded = true;
-      this.isLoading = false;
-
     } catch (error) {
       console.error('Error initializing Stripe:', error);
       this.isLoading = false;
-      Swal.fire('Error', 'Failed to initialize payment system', 'error');
+      this.isStripeLoaded = true;
     }
-  }
-
-  // ==================== PAYMENT HISTORY ====================
-
-  loadPaymentHistory(): void {
-    if (!this.userId) return;
-    
-    this.http.get(`${this.apiUrl}/payment/user/${this.userId}`).subscribe({
-      next: (res: any) => {
-        if (res.success) {
-          this.paymentHistory = res.data || [];
-        }
-      },
-      error: (error) => {
-        console.error('Error loading payment history:', error);
-      }
-    });
   }
 
   // ==================== PAYMENT PROCESSING ====================
@@ -254,7 +272,23 @@ export class Payment implements OnInit, AfterViewInit, OnDestroy {
     if (this.isProcessing) return;
 
     if (!this.paymentData) {
-      Swal.fire('Error', 'No payment data available', 'error');
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No payment data available',
+        confirmButtonText: 'OK'
+      });
+      return;
+    }
+
+    // Validate amount
+    if (!this.paymentData.amount || this.paymentData.amount <= 0) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Invalid Amount',
+        text: 'Please check the payment amount.',
+        confirmButtonText: 'OK'
+      });
       return;
     }
 
@@ -289,25 +323,26 @@ export class Payment implements OnInit, AfterViewInit, OnDestroy {
     const paymentData = {
       userId: this.userId,
       amount: this.paymentData.amount,
-      currency: 'LKR',
-      paymentType: this.paymentData.paymentType,
+      currency: this.paymentData.currency || 'LKR',
+      paymentType: this.paymentData.paymentType || 'part',
       itemId: this.paymentData.itemId || 'test',
+      itemName: this.paymentData.itemName || 'Test Purchase',
+      quantity: this.paymentData.quantity || 1,
+      unitPrice: this.paymentData.amount,
+      clearCart: this.paymentData.paymentType === 'cart' || this.paymentData.paymentType === 'part',
       metadata: {
         itemName: this.paymentData.itemName,
         ...this.paymentData.metadata
       }
     };
 
-    this.http.post(`${this.apiUrl}/payment/test-payment`, paymentData).subscribe({
+    this.http.post(`${this.apiUrl}/payment/process`, paymentData).subscribe({
       next: (res: any) => {
         this.isProcessing = false;
         
         if (res.success) {
           this.paymentStatus = 'success';
           this.transactionId = res.transactionId;
-          
-          // Save transaction data
-          this.savePaymentRecord(res);
           
           Swal.fire({
             icon: 'success',
@@ -316,7 +351,10 @@ export class Payment implements OnInit, AfterViewInit, OnDestroy {
             confirmButtonText: 'OK'
           }).then(() => {
             this.router.navigate(['/payment-success'], {
-              queryParams: { transactionId: res.transactionId }
+              queryParams: { 
+                transactionId: res.transactionId,
+                amount: this.paymentData.amount
+              }
             });
           });
         } else {
@@ -348,30 +386,40 @@ export class Payment implements OnInit, AfterViewInit, OnDestroy {
 
   async processLivePayment(): Promise<void> {
     if (!this.cardElement || !this.stripe) {
-      Swal.fire('Error', 'Payment system not initialized', 'error');
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Payment system not initialized',
+        confirmButtonText: 'OK'
+      });
+      this.isProcessing = false;
       return;
     }
 
     // Create payment intent
     const intentData = {
+      userId: this.userId,
       amount: this.paymentData.amount,
-      currency: 'LKR',
+      currency: this.paymentData.currency || 'LKR',
+      paymentType: this.paymentData.paymentType || 'part',
+      itemId: this.paymentData.itemId || '',
+      itemName: this.paymentData.itemName || '',
+      quantity: this.paymentData.quantity || 1,
+      unitPrice: this.paymentData.amount,
       metadata: {
-        userId: this.userId,
-        paymentType: this.paymentData.paymentType,
-        itemId: this.paymentData.itemId || '',
-        itemName: this.paymentData.itemName
+        itemName: this.paymentData.itemName,
+        ...this.paymentData.metadata
       }
     };
 
     try {
-      const intentResponse = await this.http.post(`${this.apiUrl}/payment/create-intent`, intentData).toPromise() as any;
+      const intentResponse = await this.http.post(`${this.apiUrl}/payment/process`, intentData).toPromise() as any;
       
       if (!intentResponse.success) {
         throw new Error(intentResponse.error || 'Failed to create payment intent');
       }
 
-      const clientSecret = intentResponse.data.clientSecret;
+      const clientSecret = intentResponse.clientSecret;
 
       // Confirm payment with Stripe
       const { error, paymentIntent } = await this.stripe.confirmCardPayment(clientSecret, {
@@ -396,13 +444,6 @@ export class Payment implements OnInit, AfterViewInit, OnDestroy {
         this.paymentStatus = 'success';
         this.transactionId = paymentIntent.id;
         
-        // Save payment record
-        this.savePaymentRecord({
-          transactionId: paymentIntent.id,
-          amount: this.paymentData.amount,
-          status: 'completed'
-        });
-        
         Swal.fire({
           icon: 'success',
           title: 'Payment Successful!',
@@ -410,7 +451,10 @@ export class Payment implements OnInit, AfterViewInit, OnDestroy {
           confirmButtonText: 'OK'
         }).then(() => {
           this.router.navigate(['/payment-success'], {
-            queryParams: { transactionId: paymentIntent.id }
+            queryParams: { 
+              transactionId: paymentIntent.id,
+              amount: this.paymentData.amount
+            }
           });
         });
       }
@@ -428,36 +472,6 @@ export class Payment implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  // ==================== SAVE PAYMENT RECORD ====================
-
-  savePaymentRecord(paymentResult: any): void {
-    const paymentRecord = {
-      transactionId: paymentResult.transactionId || `txn_${Date.now()}`,
-      userId: this.userId,
-      paymentType: this.paymentData.paymentType,
-      itemId: this.paymentData.itemId || '',
-      amount: this.paymentData.amount,
-      currency: 'LKR',
-      status: paymentResult.status || 'completed',
-      paymentMethod: this.isTesting ? 'test' : 'stripe',
-      isTesting: this.isTesting,
-      metadata: {
-        itemName: this.paymentData.itemName,
-        ...this.paymentData.metadata
-      }
-    };
-
-    this.http.post(`${this.apiUrl}/payment/save`, paymentRecord).subscribe({
-      next: (res: any) => {
-        console.log('Payment record saved:', res);
-        this.loadPaymentHistory(); // Refresh history
-      },
-      error: (error) => {
-        console.error('Error saving payment record:', error);
-      }
-    });
-  }
-
   // ==================== UTILITY ====================
 
   formatPrice(price: number): string {
@@ -466,13 +480,32 @@ export class Payment implements OnInit, AfterViewInit, OnDestroy {
   }
 
   goBack(): void {
-    // Navigate back to the appropriate page
     if (this.paymentData?.paymentType === 'car') {
       this.router.navigate(['/car-details']);
     } else if (this.paymentData?.paymentType === 'part') {
       this.router.navigate(['/part-details']);
-    } else {
+    } else if (this.paymentData?.paymentType === 'cart') {
       this.router.navigate(['/cart']);
+    } else {
+      this.router.navigate(['/manage-parts']);
     }
+  }
+
+  copyTestCardInfo(): void {
+    const cardInfo = `${this.testCard.number} | Exp: ${this.testCard.expiry} | CVV: ${this.testCard.cvv}`;
+    navigator.clipboard.writeText(cardInfo).then(() => {
+      Swal.fire({
+        icon: 'success',
+        title: 'Copied!',
+        text: 'Test card info copied to clipboard',
+        timer: 1500,
+        showConfirmButton: false,
+        toast: true,
+        position: 'top-end'
+      });
+    }).catch(() => {
+      // Fallback
+      alert('Test Card: 4242 4242 4242 4242 | Exp: 12/25 | CVV: 123');
+    });
   }
 }

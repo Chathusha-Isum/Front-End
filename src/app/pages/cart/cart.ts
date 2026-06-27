@@ -360,12 +360,39 @@ export class Cart implements OnInit {
       });
       return;
     }
+
+    // Prepare payment data for cart
+    const totalAmount = this.getCartTotal();
     
-    Swal.fire({
-      icon: 'info',
-      title: 'Checkout',
-      text: 'Checkout functionality coming soon!',
-      confirmButtonColor: '#6366f1'
-    });
+    // Get cart items details for payment
+    const cartItemsDetails = this.cartItems.map(item => ({
+      part_id: item.part,
+      name: item.part_name,
+      qty: item.qty,
+      price: item.part_price,
+      total: item.total || (item.part_price * item.qty)
+    }));
+
+    const paymentData = {
+      amount: totalAmount,
+      currency: 'LKR',
+      paymentType: 'part',
+      itemId: 'cart_' + Date.now(),
+      itemName: `${this.cartItems.length} items`,
+      quantity: this.cartItems.length,
+      unitPrice: totalAmount,
+      clearCart: true,
+      cartItems: cartItemsDetails,
+      metadata: {
+        cartItems: cartItemsDetails,
+        totalItems: this.cartItems.length
+      }
+    };
+
+    // Store payment data in localStorage
+    localStorage.setItem('paymentData', JSON.stringify(paymentData));
+
+    // Navigate to payment page
+    this.router.navigate(['/payment']);
   }
 }

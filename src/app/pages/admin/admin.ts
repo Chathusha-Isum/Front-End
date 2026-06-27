@@ -37,18 +37,21 @@ export class Admin implements OnInit, AfterViewInit, OnDestroy {
   public revenueData: number[] = [];
   public ordersData: { labels: string[], data: number[] } = { labels: ['Cars', 'Parts'], data: [0, 0] };
 
-  // Orders - Separate arrays for recent and all orders
-  public recentOrders: any[] = [];
-  public allOrders: any[] = [];  // NEW: Store ALL orders
-  public showAllOrders: boolean = false;  // NEW: Toggle between recent and all
+  // Purchases data
+  public allPurchases: any[] = [];
+  public recentPurchases: any[] = [];
+  public showAllPurchases: boolean = false;
   public isLoading: boolean = true;
 
   // All data for calculations
   private allUsers: any[] = [];
   private allProducts: any[] = [];
   private allParts: any[] = [];
-  private allUserProducts: any[] = [];
-  private allUserParts: any[] = [];
+  private allPayments: any[] = [];
+
+  // Cache for product/part names
+  private productCache: Map<string, any> = new Map();
+  private partCache: Map<string, any> = new Map();
 
   constructor(
     private http: HttpClient,
@@ -91,16 +94,17 @@ export class Admin implements OnInit, AfterViewInit, OnDestroy {
     this.isLoading = true;
     this.chartsCreated = false;
     this.dataLoaded = false;
-    this.showAllOrders = false;  // Reset to show recent orders
+    this.showAllPurchases = false;
     this.fetchAllData();
   }
 
   fetchAllData(): void {
-    // First fetch users, products, and parts
+    // Fetch users, products, parts, and payments
     forkJoin({
       users: this.http.get(`${this.apiUrl}/user`),
       products: this.http.get(`${this.apiUrl}/product`),
-      parts: this.http.get(`${this.apiUrl}/carpart`)
+      parts: this.http.get(`${this.apiUrl}/carpart`),
+      payments: this.http.get(`${this.apiUrl}/payment/all`)
     }).subscribe({
       next: (results: any) => {
         // Store users
@@ -108,103 +112,32 @@ export class Admin implements OnInit, AfterViewInit, OnDestroy {
         this.activeUsers = this.allUsers.filter((u: any) => u.status === 'active').length;
         console.log(`✅ Loaded ${this.allUsers.length} users`);
 
-        // Store products
+        // Store products with caching
         this.allProducts = results.products.data || [];
         this.totalProducts = this.allProducts.length;
+        this.allProducts.forEach((p: any) => {
+          this.productCache.set(p.id, p);
+        });
         console.log(`✅ Loaded ${this.allProducts.length} products`);
 
-        // Store parts
+        // Store parts with caching
         this.allParts = results.parts.data || [];
         this.totalParts = this.allParts.length;
+        this.allParts.forEach((p: any) => {
+          this.partCache.set(p.id, p);
+        });
         console.log(`✅ Loaded ${this.allParts.length} parts`);
 
-        // Now fetch purchases for ALL users using the correct API
-        this.fetchAllUserPurchases();
+        // Store payments
+        this.allPayments = results.payments.data || [];
+        console.log(`✅ Loaded ${this.allPayments.length} payments`);
+
+        this.processLoadedData();
       },
       error: (error) => {
-        console.warn('Using mock data due to API error:', error);
-      }
-    });
-  }
-
-  fetchAllUserPurchases(): void {
-    // If no users, use mock data
-    if (this.allUsers.length === 0) {
-      console.warn('No users found, using mock data');
-      return;
-    }
-
-    // Create an array to hold all the API calls
-    const carRequests: any[] = [];
-    const partRequests: any[] = [];
-
-    // For each user, make a request to get their car and part purchases
-    this.allUsers.forEach((user: any) => {
-      // Only make requests if user has an email
-      if (user.email) {
-        carRequests.push(
-          this.http.get(`${this.apiUrl}/user/car/email?email=${user.email}`)
-        );
-        partRequests.push(
-          this.http.get(`${this.apiUrl}/user/part/email?email=${user.email}`)
-        );
-      }
-    });
-
-    // If no valid requests, use mock data
-    if (carRequests.length === 0) {
-      console.warn('No valid users with email, using mock data');
-      return;
-    }
-
-    // Fetch all car purchases in parallel
-    forkJoin(carRequests).subscribe({
-      next: (carResults: any[]) => {
-        // Fetch all part purchases in parallel
-        forkJoin(partRequests).subscribe({
-          next: (partResults: any[]) => {
-            let allCarPurchases: any[] = [];
-            let allPartPurchases: any[] = [];
-
-            // Process car purchases
-            carResults.forEach((result: any, index: number) => {
-              const purchases = result.data || [];
-              const user = this.allUsers[index];
-              purchases.forEach((purchase: any) => {
-                purchase.userid = user.id;
-                purchase.userEmail = user.email;
-                purchase.userName = `${user.fname || ''} ${user.lname || ''}`.trim() || 'Unknown User';
-                allCarPurchases.push(purchase);
-              });
-            });
-
-            // Process part purchases
-            partResults.forEach((result: any, index: number) => {
-              const purchases = result.data || [];
-              const user = this.allUsers[index];
-              purchases.forEach((purchase: any) => {
-                purchase.userid = user.id;
-                purchase.userEmail = user.email;
-                purchase.userName = `${user.fname || ''} ${user.lname || ''}`.trim() || 'Unknown User';
-                allPartPurchases.push(purchase);
-              });
-            });
-
-            this.allUserProducts = allCarPurchases;
-            this.allUserParts = allPartPurchases;
-
-            console.log(`✅ Loaded ${allCarPurchases.length} car purchases from ALL users`);
-            console.log(`✅ Loaded ${allPartPurchases.length} part purchases from ALL users`);
-
-            this.processLoadedData();
-          },
-          error: (error) => {
-            console.warn('Error fetching part purchases, using mock data:', error);
-          }
-        });
-      },
-      error: (error) => {
-        console.warn('Error fetching car purchases, using mock data:', error);
+        console.warn('Error fetching data:', error);
+        this.isLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -213,7 +146,7 @@ export class Admin implements OnInit, AfterViewInit, OnDestroy {
     this.dataLoaded = true;
     this.isLoading = false;
     this.calculateRevenue();
-    this.generateAllOrders();  // Generate ALL orders first
+    this.generateAllPurchases();
     this.generateOrdersData();
     this.cdr.detectChanges();
 
@@ -226,97 +159,124 @@ export class Admin implements OnInit, AfterViewInit, OnDestroy {
 
   calculateRevenue(): void {
     let total = 0;
+    let orderCount = 0;
 
-    // Calculate revenue from ALL cars purchased by ALL users
-    if (this.allUserProducts && this.allProducts) {
-      this.allUserProducts.forEach((up: any) => {
-        const product = this.allProducts.find((p: any) => p.id === up.product);
-        if (product) {
-          const price = parseFloat(product.price) || 0;
-          total += price;
-        }
-      });
-    }
+    // Filter only completed payments
+    const completedPayments = this.allPayments.filter((p: any) => p.status === 'completed');
 
-    // Calculate revenue from ALL parts purchased by ALL users
-    if (this.allUserParts && this.allParts) {
-      this.allUserParts.forEach((up: any) => {
-        const part = this.allParts.find((p: any) => p.id === up.part);
-        if (part) {
-          const price = parseFloat(part.price) || 0;
-          const quantity = up.qty || 1;
-          total += price * quantity;
-        }
-      });
-    }
+    completedPayments.forEach((payment: any) => {
+      total += parseFloat(payment.amount) || 0;
+      orderCount++;
+    });
 
     this.totalRevenue = total;
-    this.totalOrders = this.allUserProducts.length + this.allUserParts.length;
+    this.totalOrders = orderCount;
     console.log(`✅ Total Revenue: LKR ${this.totalRevenue.toLocaleString()} from ${this.totalOrders} orders`);
     this.cdr.detectChanges();
   }
 
-  // NEW: Generate ALL orders
-  generateAllOrders(): void {
-    const orders: any[] = [];
+  generateAllPurchases(): void {
+    const purchases: any[] = [];
 
-    // Process ALL car orders from ALL users
-    if (this.allUserProducts && this.allProducts) {
-      this.allUserProducts.forEach((up: any, index: number) => {
-        const product = this.allProducts.find((p: any) => p.id === up.product);
-        if (product) {
-          orders.push({
-            id: `ORD-${String(index + 1).padStart(4, '0')}`,
-            customer: up.userName || 'Unknown User',
-            customerAvatar: '',
-            items: product.name || 'Car',
-            total: parseFloat(product.price) || 0,
-            date: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000), // Spread over 30 days
-            type: 'car',
-            userId: up.userid
-          });
-        }
-      });
-    }
+    // Filter only completed payments
+    const completedPayments = this.allPayments.filter((p: any) => p.status === 'completed');
 
-    // Process ALL part orders from ALL users
-    if (this.allUserParts && this.allParts) {
-      this.allUserParts.forEach((up: any, index: number) => {
-        const part = this.allParts.find((p: any) => p.id === up.part);
-        if (part) {
-          orders.push({
-            id: `ORD-${String(index + this.allUserProducts.length + 1).padStart(4, '0')}`,
-            customer: up.userName || 'Unknown User',
-            customerAvatar: '',
-            items: `${part.name || 'Part'} (${part.car || 'Generic'})`,
-            total: (parseFloat(part.price) || 0) * (up.qty || 1),
-            date: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000), // Spread over 30 days
-            type: 'part',
-            userId: up.userid
-          });
+    completedPayments.forEach((payment: any, index: number) => {
+      // Find user details
+      const user = this.allUsers.find((u: any) => u.id === payment.user_id);
+      
+      let itemDetails: any = {};
+      let type = payment.payment_type === 'car' ? 'Car' : 'Part';
+
+      if (payment.payment_type === 'car') {
+        // Car purchase
+        const product = this.productCache.get(payment.item_id);
+        itemDetails = {
+          itemName: product?.name || payment.item_name || 'Unknown Car',
+          itemBrand: product?.brand || 'Unknown Brand',
+          itemCategory: product?.category || 'Uncategorized',
+          itemYear: product?.productionyear || 'N/A',
+          unitPrice: parseFloat(payment.unit_price) || parseFloat(payment.amount) || 0
+        };
+      } else if (payment.payment_type === 'part') {
+        // Part purchase
+        if (payment.cart_items) {
+          // Multiple parts from cart
+          try {
+            const cartItems = JSON.parse(payment.cart_items);
+            itemDetails = {
+              itemName: `${cartItems.length} parts`,
+              itemCar: 'Multiple',
+              itemCondition: 'Various',
+              unitPrice: parseFloat(payment.unit_price) || parseFloat(payment.amount) / (payment.quantity || 1) || 0,
+              isCart: true,
+              cartItems: cartItems
+            };
+          } catch (e) {
+            // Single part
+            const part = this.partCache.get(payment.item_id);
+            itemDetails = {
+              itemName: part?.name || payment.item_name || 'Unknown Part',
+              itemCar: part?.car || 'Generic',
+              itemCondition: part?.condition || 'Unknown',
+              unitPrice: parseFloat(payment.unit_price) || parseFloat(payment.amount) / (payment.quantity || 1) || 0
+            };
+          }
+        } else {
+          // Single part
+          const part = this.partCache.get(payment.item_id);
+          itemDetails = {
+            itemName: part?.name || payment.item_name || 'Unknown Part',
+            itemCar: part?.car || 'Generic',
+            itemCondition: part?.condition || 'Unknown',
+            unitPrice: parseFloat(payment.unit_price) || parseFloat(payment.amount) / (payment.quantity || 1) || 0
+          };
         }
+      }
+
+      purchases.push({
+        id: `PUR-${String(index + 1).padStart(4, '0')}`,
+        transactionId: payment.transaction_id,
+        userId: payment.user_id,
+        customer: user ? `${user.fname || ''} ${user.lname || ''}`.trim() : 'Unknown User',
+        email: user?.email || 'N/A',
+        contact: user?.contact || 'N/A',
+        address: user?.address || 'N/A',
+        type: type,
+        itemName: itemDetails.itemName,
+        itemBrand: itemDetails.itemBrand,
+        itemCategory: itemDetails.itemCategory,
+        itemYear: itemDetails.itemYear,
+        itemCar: itemDetails.itemCar,
+        itemCondition: itemDetails.itemCondition,
+        quantity: payment.quantity || 1,
+        unitPrice: itemDetails.unitPrice,
+        total: parseFloat(payment.amount) || 0,
+        date: new Date(payment.created_at),
+        paymentMethod: payment.payment_method,
+        isTest: payment.is_test === 1
       });
-    }
+    });
 
     // Sort by date (newest first)
-    this.allOrders = orders.sort((a, b) => b.date.getTime() - a.date.getTime());
+    this.allPurchases = purchases.sort((a, b) => b.date.getTime() - a.date.getTime());
 
-    // Set recent orders to first 5
-    this.recentOrders = this.allOrders.slice(0, 5);
+    // Set recent purchases to first 10
+    this.recentPurchases = this.allPurchases.slice(0, 10);
 
-    console.log(`✅ Generated ${this.allOrders.length} total orders, showing ${this.recentOrders.length} recent`);
+    console.log(`✅ Generated ${this.allPurchases.length} total purchases`);
     this.cdr.detectChanges();
   }
 
-  // NEW: Toggle between showing recent and all orders
-  toggleViewAllOrders(): void {
-    this.showAllOrders = !this.showAllOrders;
+  toggleViewAllPurchases(): void {
+    this.showAllPurchases = !this.showAllPurchases;
     this.cdr.detectChanges();
   }
 
   generateOrdersData(): void {
-    const carCount = this.allUserProducts?.length || 0;
-    const partCount = this.allUserParts?.length || 0;
+    const completedPayments = this.allPayments.filter((p: any) => p.status === 'completed');
+    const carCount = completedPayments.filter((p: any) => p.payment_type === 'car').length;
+    const partCount = completedPayments.filter((p: any) => p.payment_type === 'part').length;
 
     this.ordersData = {
       labels: ['Cars', 'Parts'],
@@ -549,7 +509,7 @@ export class Admin implements OnInit, AfterViewInit, OnDestroy {
     this.chartsCreated = false;
     this.dataLoaded = false;
     this.initAttempts = 0;
-    this.showAllOrders = false;
+    this.showAllPurchases = false;
     this.loadDashboardData();
   }
 
@@ -595,24 +555,11 @@ export class Admin implements OnInit, AfterViewInit, OnDestroy {
       },
       revenueData: this.revenueData,
       ordersData: this.ordersData,
-      recentOrders: this.recentOrders,
-      allOrders: this.allOrders
+      recentPurchases: this.recentPurchases,
+      allPurchases: this.allPurchases
     };
 
-    this.http.post(`${this.apiUrl}/admin/generate-report`, reportData, { responseType: 'blob' })
-      .subscribe({
-        next: (blob: Blob) => {
-          const url = window.URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = `report_${new Date().toISOString().split('T')[0]}.pdf`;
-          link.click();
-          window.URL.revokeObjectURL(url);
-        },
-        error: () => {
-          this.createFallbackReport(reportData);
-        }
-      });
+    this.createFallbackReport(reportData);
   }
 
   createFallbackReport(data: any): void {
@@ -646,10 +593,10 @@ ${data.ordersData.labels.map((label: string, i: number) =>
     ).join('\n')}
 
 ===========================================
-  RECENT ORDERS
+  ALL PURCHASES
 ===========================================
-${data.recentOrders.map((order: any) =>
-      `  #${order.id} | ${order.customer} | ${order.items} | ${this.formatPrice(order.total)}`
+${data.allPurchases.map((purchase: any) =>
+      `  #${purchase.id} | ${purchase.customer} | ${purchase.type} | ${purchase.itemName} | ${this.formatPrice(purchase.total)}`
     ).join('\n')}
     `;
 
@@ -662,21 +609,19 @@ ${data.recentOrders.map((order: any) =>
     window.URL.revokeObjectURL(url);
   }
 
-  getProfile(name: string): any {
-    this.allUsers
-    for (let i = 0; i < this.allUsers.length; i++) {
-      const username = this.allUsers[i].fname + " " + this.allUsers[i].lname
-      if (username === name) {
-        if (this.allUsers[i].profile_pic) {
-
-          if (this.allUsers[i].profile_pic.startsWith('http')) {
-            return this.allUsers[i].profile_pic;
-          }
-          return `${this.apiUrl}/api/images/profiles/${this.allUsers[i].profile_pic}`;
+  getProfilePic(userId: string): string {
+    const user = this.allUsers.find((u: any) => u.id === userId);
+    if (user) {
+      if (user.profile_pic) {
+        if (user.profile_pic.startsWith('http')) {
+          return user.profile_pic;
         }
-        return `https://ui-avatars.com/api/?name=${this.allUsers[i].name}&size=110&background=2b5f7a&color=fff&bold=true&font-size=0.5`;
+        return `${this.apiUrl}/api/images/profiles/${user.profile_pic}`;
       }
+      const name = `${user.fname || ''} ${user.lname || ''}`.trim() || 'User';
+      return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=80&background=6366f1&color=fff&bold=true`;
     }
+    return `https://ui-avatars.com/api/?name=User&size=80&background=6366f1&color=fff&bold=true`;
   }
 
   ngOnDestroy(): void {

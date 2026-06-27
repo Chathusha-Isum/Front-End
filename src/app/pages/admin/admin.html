@@ -166,54 +166,90 @@
                 </div>
             </div>
 
-            <!-- ===== RECENT ORDERS TABLE ===== -->
+            <!-- ===== ALL PURCHASES TABLE ===== -->
             <div class="glass-card rounded-2xl p-6 border border-white/5">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-white font-semibold text-lg flex items-center gap-2">
-                        <i class="fas fa-clock text-indigo-400"></i>
-                        {{ showAllOrders ? 'All Orders' : 'Recent Orders' }}
+                        <i class="fas fa-shopping-bag text-indigo-400"></i>
+                        {{ showAllPurchases ? 'All Purchases' : 'Recent Purchases' }}
+                        <span class="text-xs text-slate-400 ml-2">
+                            ({{ showAllPurchases ? allPurchases.length : recentPurchases.length }} items)
+                        </span>
                     </h3>
-                    <button (click)="toggleViewAllOrders()"
+                    <button (click)="toggleViewAllPurchases()"
                         class="text-indigo-400 hover:text-indigo-300 text-sm transition-colors">
-                        {{ showAllOrders ? 'Show Recent' : 'View All' }}
-                        <i class="fas fa-arrow-{{ showAllOrders ? 'up' : 'right' }} ml-1"></i>
+                        {{ showAllPurchases ? 'Show Recent' : 'View All' }}
+                        <i class="fas fa-arrow-{{ showAllPurchases ? 'up' : 'right' }} ml-1"></i>
                     </button>
                 </div>
+
                 <div class="table-container">
                     <table class="w-full text-sm">
                         <thead>
                             <tr class="border-b border-white/5 text-slate-400 text-xs uppercase tracking-wider">
-                                <th class="text-left py-3 px-3 font-medium">Order ID</th>
+                                <th class="text-left py-3 px-3 font-medium">Purchase ID</th>
                                 <th class="text-left py-3 px-3 font-medium">Customer</th>
-                                <th class="text-left py-3 px-3 font-medium">Items</th>
+                                <th class="text-left py-3 px-3 font-medium">Item</th>
+                                <th class="text-left py-3 px-3 font-medium">Type</th>
+                                <th class="text-left py-3 px-3 font-medium">Qty</th>
                                 <th class="text-left py-3 px-3 font-medium">Total</th>
                                 <th class="text-left py-3 px-3 font-medium">Date</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr *ngFor="let order of (showAllOrders ? allOrders : recentOrders)"
+                            <tr *ngFor="let purchase of (showAllPurchases ? allPurchases : recentPurchases)"
                                 class="border-b border-white/5 hover:bg-white/5 transition-colors">
-                                <td class="py-3 px-3 text-white font-mono text-xs">#{{order.id}}</td>
+                                <td class="py-3 px-3 text-white font-mono text-xs">#{{purchase.id}}</td>
                                 <td class="py-3 px-3">
                                     <div class="flex items-center gap-2">
-                                        <img [src]="getProfile(order.customer)"
-                                            class="w-8 h-8 rounded-full object-cover">
-                                        <span>{{order.customer}}</span>
+                                        <img [src]="getProfilePic(purchase.userId)"
+                                            class="w-8 h-8 rounded-full object-cover"
+                                            onerror="this.src='https://ui-avatars.com/api/?name=User&size=80&background=6366f1&color=fff&bold=true'">
+                                        <div>
+                                            <span class="text-white text-sm">{{purchase.customer}}</span>
+                                            <span class="text-slate-400 text-xs block">{{purchase.email}}</span>
+                                        </div>
                                     </div>
                                 </td>
-                                <td class="py-3 px-3">{{order.items}}</td>
-                                <td class="py-3 px-3 text-amber-300 font-medium">{{formatPrice(order.total)}}</td>
-                                <td class="py-3 px-3 text-slate-400">{{order.date | date:'MMM d, y'}}</td>
+                                <td class="py-3 px-3">
+                                    <div>
+                                        <span class="text-white">{{purchase.itemName}}</span>
+                                        <span *ngIf="purchase.type === 'Car'" class="text-slate-400 text-xs block">
+                                            {{purchase.itemBrand}} ({{purchase.itemYear}})
+                                        </span>
+                                        <span *ngIf="purchase.type === 'Part'" class="text-slate-400 text-xs block">
+                                            {{purchase.itemCar || 'Generic'}} - {{purchase.itemCondition}}
+                                        </span>
+                                    </div>
+                                </td>
+                                <td class="py-3 px-3">
+                                    <span class="px-2 py-1 rounded-full text-xs font-medium"
+                                        [class.bg-indigo-500/20]="purchase.type === 'Car'"
+                                        [class.bg-emerald-500/20]="purchase.type === 'Part'"
+                                        [class.text-indigo-300]="purchase.type === 'Car'"
+                                        [class.text-emerald-300]="purchase.type === 'Part'">
+                                        {{purchase.type}}
+                                    </span>
+                                </td>
+                                <td class="py-3 px-3 text-white">{{purchase.quantity}}</td>
+                                <td class="py-3 px-3 text-amber-300 font-medium">{{formatPrice(purchase.total)}}</td>
+                                <td class="py-3 px-3 text-slate-400">{{purchase.date | date:'MMM d, y'}}</td>
                             </tr>
                         </tbody>
                     </table>
-                    <div *ngIf="(showAllOrders ? allOrders : recentOrders).length === 0"
-                        class="text-center py-8 text-slate-400">
-                        No orders found
+                    
+                    <!-- Empty State -->
+                    <div *ngIf="(showAllPurchases ? allPurchases : recentPurchases).length === 0"
+                        class="text-center py-12 text-slate-400">
+                        <i class="fas fa-shopping-bag text-4xl mb-3 block opacity-30"></i>
+                        <p>No purchases found</p>
+                        <p class="text-xs mt-1">When users make purchases, they will appear here.</p>
                     </div>
                 </div>
-                <div *ngIf="showAllOrders && allOrders.length > 5" class="mt-4 text-xs text-slate-400 text-center">
-                    Showing all {{ allOrders.length }} orders
+
+                <!-- Footer info -->
+                <div *ngIf="showAllPurchases && allPurchases.length > 0" class="mt-4 text-xs text-slate-400 text-center">
+                    Showing all {{ allPurchases.length }} purchases
                 </div>
             </div>
         </div>

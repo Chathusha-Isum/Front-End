@@ -45,18 +45,17 @@
             <h2 class="text-lg font-semibold text-white mb-4">Order Summary</h2>
             
             <div *ngIf="paymentData" class="space-y-3">
-                <!-- Item details -->
                 <div class="flex justify-between text-sm">
                     <span class="text-slate-400">Item</span>
-                    <span class="text-white font-medium">{{ paymentData.itemName }}</span>
+                    <span class="text-white font-medium">{{ paymentData.itemName || 'Purchase' }}</span>
+                </div>
+                <div class="flex justify-between text-sm" *ngIf="paymentData.quantity">
+                    <span class="text-slate-400">Quantity</span>
+                    <span class="text-white font-medium">{{ paymentData.quantity }}</span>
                 </div>
                 <div class="flex justify-between text-sm">
                     <span class="text-slate-400">Type</span>
-                    <span class="text-white font-medium capitalize">{{ paymentData.paymentType }}</span>
-                </div>
-                <div class="flex justify-between text-sm" *ngIf="paymentData.paymentType === 'cart'">
-                    <span class="text-slate-400">Items in Cart</span>
-                    <span class="text-white font-medium">{{ paymentData.cartItems || 0 }}</span>
+                    <span class="text-white font-medium capitalize">{{ paymentData.paymentType || 'Part' }}</span>
                 </div>
                 <div class="flex justify-between text-sm">
                     <span class="text-slate-400">Payment Mode</span>
@@ -74,46 +73,64 @@
 
         <!-- ===== TEST CARD INFO (Test Mode Only) ===== -->
         <div *ngIf="isTesting" class="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 mb-6">
-            <div class="flex items-center gap-2 text-blue-400 mb-2">
-                <i class="fas fa-info-circle"></i>
-                <span class="font-medium text-sm">Test Card Details</span>
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2 text-blue-400">
+                    <i class="fas fa-credit-card"></i>
+                    <span class="font-medium text-sm">Test Card Details</span>
+                </div>
+                <button (click)="copyTestCardInfo()" class="text-xs text-blue-400 hover:text-blue-300 transition-colors">
+                    <i class="fas fa-copy mr-1"></i> Copy
+                </button>
             </div>
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm bg-slate-900/50 rounded-lg p-3">
                 <div>
-                    <span class="text-slate-400">Card Number</span>
-                    <p class="text-white font-mono">4242 4242 4242 4242</p>
+                    <span class="text-slate-400 text-xs">Card Number</span>
+                    <p class="text-white font-mono text-sm">{{ testCard.number }}</p>
                 </div>
                 <div>
-                    <span class="text-slate-400">Expiry</span>
-                    <p class="text-white font-mono">12/25</p>
+                    <span class="text-slate-400 text-xs">Expiry</span>
+                    <p class="text-white font-mono text-sm">{{ testCard.expiry }}</p>
                 </div>
                 <div>
-                    <span class="text-slate-400">CVV</span>
-                    <p class="text-white font-mono">123</p>
+                    <span class="text-slate-400 text-xs">CVV</span>
+                    <p class="text-white font-mono text-sm">{{ testCard.cvv }}</p>
                 </div>
             </div>
+            <p class="text-xs text-slate-500 mt-3">
+                <i class="fas fa-info-circle mr-1"></i>
+                No real money will be charged in test mode
+            </p>
         </div>
 
         <!-- ===== PAYMENT FORM ===== -->
         <div class="bg-slate-800 rounded-2xl p-6 border border-slate-700/60">
             <h2 class="text-lg font-semibold text-white mb-4">Payment Details</h2>
 
-            <!-- Card Elements (Stripe) -->
-            <div id="card-element" class="bg-slate-900/50 rounded-xl p-4 border border-slate-700/60 mb-4">
-                <!-- Stripe card element will be mounted here -->
-                <div class="text-slate-400 text-sm" *ngIf="!isStripeLoaded">
-                    <i class="fas fa-spinner fa-spin mr-2"></i>
-                    Loading payment form...
+            <!-- Card Elements (Stripe) - Only show in live mode -->
+            <div *ngIf="!isTesting">
+                <div id="card-element" class="bg-slate-900/50 rounded-xl p-4 border border-slate-700/60 mb-4">
+                    <div class="text-slate-400 text-sm" *ngIf="!isStripeLoaded">
+                        <i class="fas fa-spinner fa-spin mr-2"></i>
+                        Loading payment form...
+                    </div>
                 </div>
+
+                <!-- Card Errors -->
+                <div id="card-errors" class="text-red-400 text-sm mb-4" role="alert"></div>
             </div>
 
-            <!-- Card Errors -->
-            <div id="card-errors" class="text-red-400 text-sm mb-4" role="alert"></div>
+            <!-- Test Mode Message -->
+            <div *ngIf="isTesting" class="bg-slate-900/50 rounded-xl p-4 border border-slate-700/60 mb-4 text-center">
+                <p class="text-slate-400 text-sm">
+                    <i class="fas fa-check-circle text-green-400 mr-2"></i>
+                    Test mode is active. Click "Pay with Test Card" to simulate a payment.
+                </p>
+            </div>
 
             <!-- Payment Button -->
             <button 
                 (click)="processPayment()" 
-                [disabled]="isProcessing || !isStripeLoaded"
+                [disabled]="isProcessing || (!isTesting && !isStripeLoaded)"
                 class="w-full bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-xl transition-all text-lg flex items-center justify-center gap-2"
             >
                 <i class="fas fa-spinner fa-spin" *ngIf="isProcessing"></i>
@@ -121,34 +138,11 @@
                 {{ isProcessing ? 'Processing...' : (isTesting ? 'Pay with Test Card' : 'Pay Now') }}
             </button>
 
-            <!-- Test Mode Notice -->
-            <p *ngIf="isTesting" class="text-center text-xs text-slate-500 mt-4">
-                <i class="fas fa-info-circle mr-1"></i>
-                No real money will be charged in test mode
+            <!-- Security Notice -->
+            <p class="text-center text-xs text-slate-500 mt-4 flex items-center justify-center gap-2">
+                <i class="fas fa-lock text-emerald-400"></i>
+                <span>Your payment is secure and encrypted</span>
             </p>
-        </div>
-
-        <!-- ===== PAYMENT HISTORY (Optional) ===== -->
-        <div *ngIf="paymentHistory.length > 0" class="mt-8">
-            <h3 class="text-lg font-semibold text-white mb-4">Payment History</h3>
-            <div class="space-y-2">
-                <div *ngFor="let payment of paymentHistory" 
-                     class="bg-slate-800/50 rounded-xl p-4 border border-slate-700/60 flex justify-between items-center">
-                    <div>
-                        <p class="text-white font-medium">{{ payment.item_name || 'Payment' }}</p>
-                        <p class="text-xs text-slate-400">{{ payment.created_at | date:'medium' }}</p>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-emerald-300 font-medium">{{ formatPrice(payment.amount) }}</p>
-                        <span class="text-xs px-2 py-0.5 rounded-full" 
-                              [class.bg-emerald-500/20]="payment.status === 'completed'"
-                              [class.bg-red-500/20]="payment.status === 'failed'"
-                              [class.bg-yellow-500/20]="payment.status === 'pending'">
-                            {{ payment.status }}
-                        </span>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 </div>

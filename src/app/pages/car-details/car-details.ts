@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Upload } from '../../component/upload/upload';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-car-details',
@@ -82,7 +83,7 @@ export class CarDetails implements OnInit, AfterViewInit {
 
   fetchCarImages(): void {
     if (!this.id) return;
-    
+
     this.isLoadingImages = true;
     this.images = [];
 
@@ -153,5 +154,40 @@ export class CarDetails implements OnInit, AfterViewInit {
 
   goBack(): void {
     this.router.navigate(['/cars']);
+  }
+
+  // ==================== NAVIGATE TO PAYMENT ====================
+  goToPayment(): void {
+    if (!this.data) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Car data not available',
+        confirmButtonText: 'OK'
+      });
+      return;
+    }
+
+    // Prepare payment data
+    const paymentData = {
+      amount: this.data.price,
+      currency: 'LKR',
+      paymentType: 'car',
+      itemId: this.data.id,
+      itemName: this.data.name,
+      quantity: 1,
+      unitPrice: this.data.price,
+      metadata: {
+        carBrand: this.data.brand,
+        carYear: this.data.productionyear,
+        carCategory: this.data.category
+      }
+    };
+
+    // Store payment data in localStorage
+    localStorage.setItem('paymentData', JSON.stringify(paymentData));
+
+    // Navigate to payment page
+    this.router.navigate(['/payment']);
   }
 }
