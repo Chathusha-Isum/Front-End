@@ -16,11 +16,13 @@ import { Cart } from './pages/cart/cart';
 import { ForgotPassword } from './pages/forgot-password/forgot-password';
 import { ManageCars } from './pages/manage-cars/manage-cars';
 import { ManageParts } from './pages/manage-parts/manage-parts';
+import { Payment } from './pages/payment/payment';
+import { PaymentSuccess } from './pages/payment-success/payment-success';
 
 export const routes: Routes = [
     {
         path: "",
-        component:Home
+        component: Home
     },
     {
         path: "car-details",
@@ -82,5 +84,13 @@ export const routes: Routes = [
         path: "manage-parts",
         component: ManageParts
     },
-    
+    {
+        path: 'payment',
+        component: Payment
+    },
+    {
+        path: 'payment-success',
+        component: PaymentSuccess
+    }
+
 ];
