@@ -251,32 +251,87 @@
         </div>
       </div>
 
-      <!-- Full Width - Image Upload -->
-      <div class="col-span-1 md:col-span-2">
-        <label class="block text-sm font-medium text-slate-300 mb-1">Car Image</label>
+      <!-- Full Width - Main Image (products table) -->
+      <div class="col-span-1 md:col-span-2 border-t border-white/5 pt-4">
+        <label class="block text-sm font-medium text-slate-300 mb-1">
+          <i class="fas fa-star text-yellow-400 mr-1"></i>
+          Main Image <span class="text-xs text-slate-500">(stored in products table)</span>
+        </label>
         <div class="flex flex-col md:flex-row gap-4">
           <div class="flex-1">
-            <input type="file" (change)="onImageSelected($event)" accept="image/*" class="hidden" #imageInput>
-            <button (click)="imageInput.click()" class="w-full py-3 border-2 border-dashed border-white/10 rounded-lg hover:border-indigo-500 transition-colors">
-              <i class="fas fa-upload text-slate-400"></i>
-              <span class="block text-sm text-slate-400 mt-1">Upload Image</span>
+            <input type="file" (change)="onMainImageSelected($event)" accept="image/*" class="hidden" #mainImageInput>
+            <button (click)="mainImageInput.click()" class="w-full py-3 border-2 border-dashed border-indigo-500/30 rounded-lg hover:border-indigo-500 transition-colors bg-indigo-500/5">
+              <i class="fas fa-upload text-indigo-400"></i>
+              <span class="block text-sm text-slate-400 mt-1">Upload Main Image</span>
+              <span class="text-xs text-slate-500">This will be the primary image</span>
             </button>
-            <p *ngIf="selectedImageFile" class="text-xs text-green-400 mt-1">Selected: {{ selectedImageFile.name }}</p>
+            <p *ngIf="selectedMainImageFile" class="text-xs text-green-400 mt-1">Selected: {{ selectedMainImageFile.name }}</p>
           </div>
-          <div *ngIf="imagePreview" class="w-32 h-32 rounded-lg overflow-hidden bg-slate-800">
-            <img [src]="imagePreview" class="w-full h-full object-cover">
+          <div *ngIf="mainImagePreview" class="w-32 h-32 rounded-lg overflow-hidden bg-slate-800 border-2 border-indigo-500/50">
+            <img [src]="mainImagePreview" class="w-full h-full object-cover">
           </div>
         </div>
       </div>
 
-      <!-- Full Width - Model Upload -->
-      <div class="col-span-1 md:col-span-2">
-        <label class="block text-sm font-medium text-slate-300 mb-1">3D Model</label>
+      <!-- Full Width - Additional Images (car_images table) -->
+      <div class="col-span-1 md:col-span-2 border-t border-white/5 pt-4">
+        <label class="block text-sm font-medium text-slate-300 mb-1">
+          <i class="fas fa-images text-blue-400 mr-1"></i>
+          Additional Images <span class="text-xs text-slate-500">(stored in car_images table)</span>
+        </label>
+        <div class="flex flex-col gap-4">
+          <!-- Current additional images -->
+          <div *ngIf="additionalImages.length > 0" class="flex flex-wrap gap-3">
+            <div *ngFor="let img of additionalImages; let i = index" class="relative group">
+              <div class="w-24 h-24 rounded-lg overflow-hidden bg-slate-800 border border-white/10">
+                <img [src]="getImageUrl(img)" class="w-full h-full object-cover">
+              </div>
+              <button 
+                (click)="removeAdditionalImage(i)" 
+                class="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center text-xs transition-colors opacity-0 group-hover:opacity-100">
+                <i class="fas fa-times"></i>
+              </button>
+              <span class="text-[10px] text-slate-500 block text-center mt-1">Image {{ i + 1 }}</span>
+            </div>
+          </div>
+          
+          <!-- Upload new additional images -->
+          <div class="flex flex-col md:flex-row gap-4">
+            <div class="flex-1">
+              <input type="file" (change)="onAdditionalImagesSelected($event)" accept="image/*" multiple class="hidden" #additionalImagesInput>
+              <button (click)="additionalImagesInput.click()" class="w-full py-3 border-2 border-dashed border-blue-500/30 rounded-lg hover:border-blue-500 transition-colors bg-blue-500/5">
+                <i class="fas fa-plus-circle text-blue-400"></i>
+                <span class="block text-sm text-slate-400 mt-1">Add Additional Images</span>
+                <span class="text-xs text-slate-500">Select multiple images at once</span>
+              </button>
+              <div *ngIf="selectedAdditionalImageFiles.length > 0" class="mt-2">
+                <p class="text-xs text-green-400">{{ selectedAdditionalImageFiles.length }} file(s) selected to upload</p>
+                <div class="flex flex-wrap gap-1 mt-1">
+                  <span *ngFor="let file of selectedAdditionalImageFiles" class="text-xs text-slate-400 bg-slate-700 px-2 py-0.5 rounded">
+                    {{ file.name }}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center text-sm text-slate-500">
+              <i class="fas fa-info-circle mr-2 text-blue-400"></i>
+              These images will be displayed in the carousel
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Full Width - 3D Model Upload -->
+      <div class="col-span-1 md:col-span-2 border-t border-white/5 pt-4">
+        <label class="block text-sm font-medium text-slate-300 mb-1">
+          <i class="fas fa-cube text-purple-400 mr-1"></i>
+          3D Model
+        </label>
         <div class="flex flex-col md:flex-row gap-4">
           <div class="flex-1">
             <input type="file" (change)="onModelSelected($event)" accept=".glb,.gltf,.fbx,.obj" class="hidden" #modelInput>
-            <button (click)="modelInput.click()" class="w-full py-3 border-2 border-dashed border-white/10 rounded-lg hover:border-indigo-500 transition-colors">
-              <i class="fas fa-cube text-slate-400"></i>
+            <button (click)="modelInput.click()" class="w-full py-3 border-2 border-dashed border-purple-500/30 rounded-lg hover:border-purple-500 transition-colors bg-purple-500/5">
+              <i class="fas fa-upload text-purple-400"></i>
               <span class="block text-sm text-slate-400 mt-1">Upload 3D Model</span>
             </button>
             <p *ngIf="selectedModelFile" class="text-xs text-green-400 mt-1">Selected: {{ selectedModelFile.name }}</p>

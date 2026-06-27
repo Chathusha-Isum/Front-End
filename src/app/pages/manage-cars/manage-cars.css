@@ -118,3 +118,37 @@ input, textarea, select {
 input:focus, textarea:focus, select:focus {
   border-color: #6366f1;
 }
+
+/* Additional styles for manage-cars */
+.group:hover .group-hover\:opacity-100 {
+  opacity: 1;
+}
+
+.group .opacity-0 {
+  opacity: 0;
+}
+
+/* Ensure smooth transitions for hover effects */
+.group {
+  transition: all 0.2s ease;
+}
+
+/* Style for additional images upload area */
+.border-dashed {
+  border-style: dashed;
+}
+
+/* Custom scrollbar for modal */
+.modal-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.4);
+  border-radius: 3px;
+}
