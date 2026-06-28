@@ -13,7 +13,7 @@ export class Hero implements AfterViewInit, OnDestroy {
   
   // Car data with category mapping
   cars = [
-    { position: 0, category: 'Hatchback', badge: 'Compact', image: '3-2.png', color: 'purple' },
+    { position: 0, category: 'Luxury', badge: 'Compact', image: '3-2.png', color: 'purple' },
     { position: 1, category: 'Sports', badge: 'Luxury', image: '2-2.png', color: 'red' },
     { position: 2, category: 'SUV', badge: 'Most Popular', image: '1.png', color: 'orange' },
     { position: 3, category: 'Sedan', badge: 'Comfort', image: '2-1.png', color: 'green' },
@@ -91,7 +91,7 @@ export class Hero implements AfterViewInit, OnDestroy {
    */
   getCategoryDisplay(category: string): string {
     const displayNames: { [key: string]: string } = {
-      'Hatchback': 'Hatch Back',
+      'Luxury': 'Hatch Back',
       'Sports': 'Super Car',
       'SUV': 'SUV',
       'Sedan': 'Sedan',
