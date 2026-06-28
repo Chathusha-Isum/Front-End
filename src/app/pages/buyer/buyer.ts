@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-buyer',
@@ -63,14 +64,12 @@ export class Buyer implements OnInit {
   fetchUserPurchases(): void {
     this.isLoading = true;
     
-    // First get user ID from email
     this.http.get(`${this.apiUrl}/user/email?email=${this.data.email}`).subscribe({
       next: (userRes: any) => {
         if (userRes && userRes.bool && userRes.data) {
           const userId = userRes.data.id;
           console.log(`✅ User ID: ${userId}`);
           
-          // Now fetch purchases using user ID
           this.http.get(`${this.apiUrl}/payment/user/${userId}`).subscribe({
             next: (res: any) => {
               if (res.success && res.data) {
@@ -87,6 +86,12 @@ export class Buyer implements OnInit {
               console.error('Error fetching purchases:', err);
               this.isLoading = false;
               this.cdr.detectChanges();
+              Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to load purchase history',
+                confirmButtonText: 'OK'
+              });
             }
           });
         } else {
@@ -104,7 +109,6 @@ export class Buyer implements OnInit {
   }
 
   processPurchases(): void {
-    // Reset lists
     this.carlist = [];
     this.partlist = [];
     this.data.total = 0;
@@ -112,7 +116,6 @@ export class Buyer implements OnInit {
     this.data.parts_count = 0;
     this.data.count = 0;
 
-    // Filter only completed payments
     const completedPurchases = this.purchases.filter((p: any) => p.status === 'completed');
 
     if (completedPurchases.length === 0) {
@@ -124,128 +127,109 @@ export class Buyer implements OnInit {
 
     console.log(`Processing ${completedPurchases.length} completed purchases`);
 
-    let completedRequests = 0;
-    const totalRequests = completedPurchases.length;
-
-    completedPurchases.forEach((purchase: any, index: number) => {
+    completedPurchases.forEach((purchase: any) => {
       if (purchase.payment_type === 'car') {
-        // Car purchase
+        // ===== CAR PURCHASE =====
         if (purchase.item_id) {
-          this.http.get(`${this.apiUrl}/product/id?id=${purchase.item_id}`).subscribe({
-            next: (res: any) => {
-              if (res && res.data) {
-                this.carlist.push(res.data);
-                this.data.total += parseFloat(res.data.price) || 0;
-                this.data.product_count = this.carlist.length;
-                this.data.count = this.carlist.length + this.partlist.length;
-              }
-              completedRequests++;
-              this.checkAllRequestsCompleted(completedRequests, totalRequests);
-              this.cdr.detectChanges();
-            },
-            error: (err) => {
-              console.error('Error fetching car:', err);
-              completedRequests++;
-              this.checkAllRequestsCompleted(completedRequests, totalRequests);
-              this.cdr.detectChanges();
-            }
-          });
-        } else {
-          completedRequests++;
-          this.checkAllRequestsCompleted(completedRequests, totalRequests);
+          this.fetchCarDetails(purchase.item_id);
         }
       } else if (purchase.payment_type === 'part') {
-        // Part purchase
-        if (purchase.cart_items) {
-          // Multiple parts from cart
+        // ===== PART PURCHASE =====
+        // IMPORTANT: Check cart_items FIRST for actual part IDs
+        if (purchase.cart_items && purchase.cart_items !== 'null' && purchase.cart_items !== '[]') {
           try {
             const cartItems = JSON.parse(purchase.cart_items);
-            cartItems.forEach((item: any) => {
-              this.http.get(`${this.apiUrl}/carpart/id?id=${item.part_id}`).subscribe({
-                next: (res: any) => {
-                  if (res && res.data) {
-                    const partData = res.data;
-                    const qty = item.qty || 1;
-                    const unitPrice = parseFloat(partData.price) || 0;
-                    
-                    this.partlist.push({
-                      ...partData,
-                      qty: qty,
-                      originalPrice: unitPrice,
-                      price: unitPrice * qty
-                    });
-                    this.data.total += (unitPrice * qty);
-                    this.data.parts_count = this.partlist.length;
-                    this.data.count = this.carlist.length + this.partlist.length;
-                  }
-                  completedRequests++;
-                  this.checkAllRequestsCompleted(completedRequests, totalRequests);
-                  this.cdr.detectChanges();
-                },
-                error: (err) => {
-                  console.error('Error fetching part:', err);
-                  completedRequests++;
-                  this.checkAllRequestsCompleted(completedRequests, totalRequests);
-                  this.cdr.detectChanges();
+            console.log(`📦 Processing ${cartItems.length} cart items for purchase:`, cartItems);
+            
+            if (Array.isArray(cartItems) && cartItems.length > 0) {
+              cartItems.forEach((item: any) => {
+                // Use the part_id from cart_items - this has the actual part ID
+                if (item.part_id) {
+                  this.fetchPartDetails(item.part_id, item.qty || 1);
                 }
               });
-            });
+            }
           } catch (e) {
             console.error('Error parsing cart_items:', e);
-            completedRequests++;
-            this.checkAllRequestsCompleted(completedRequests, totalRequests);
           }
-        } else if (purchase.item_id) {
-          // Single part purchase
-          this.http.get(`${this.apiUrl}/carpart/id?id=${purchase.item_id}`).subscribe({
-            next: (res: any) => {
-              if (res && res.data) {
-                const partData = res.data;
-                const qty = purchase.quantity || 1;
-                const unitPrice = parseFloat(partData.price) || 0;
-                
-                this.partlist.push({
-                  ...partData,
-                  qty: qty,
-                  originalPrice: unitPrice,
-                  price: unitPrice * qty
-                });
-                this.data.total += (unitPrice * qty);
-                this.data.parts_count = this.partlist.length;
-                this.data.count = this.carlist.length + this.partlist.length;
-              }
-              completedRequests++;
-              this.checkAllRequestsCompleted(completedRequests, totalRequests);
-              this.cdr.detectChanges();
-            },
-            error: (err) => {
-              console.error('Error fetching part:', err);
-              completedRequests++;
-              this.checkAllRequestsCompleted(completedRequests, totalRequests);
-              this.cdr.detectChanges();
-            }
-          });
+        } else if (purchase.item_id && !purchase.item_id.startsWith('cart_')) {
+          // Single part purchase with valid ID
+          this.fetchPartDetails(purchase.item_id, purchase.quantity || 1);
         } else {
-          completedRequests++;
-          this.checkAllRequestsCompleted(completedRequests, totalRequests);
+          console.log(`⚠️ Skipping part purchase with cart_ placeholder: ${purchase.item_id}`);
         }
-      } else {
-        completedRequests++;
-        this.checkAllRequestsCompleted(completedRequests, totalRequests);
+      }
+    });
+
+    // Mark loading as complete after a timeout
+    setTimeout(() => {
+      this.isLoading = false;
+      this.cdr.detectChanges();
+    }, 3000);
+  }
+
+  fetchCarDetails(carId: string): void {
+    if (!carId) return;
+
+    this.http.get(`${this.apiUrl}/product/id?id=${carId}`).subscribe({
+      next: (res: any) => {
+        if (res && res.data) {
+          const exists = this.carlist.some((car: any) => car.id === carId);
+          if (!exists) {
+            this.carlist.push(res.data);
+            this.data.total += parseFloat(res.data.price) || 0;
+            this.data.product_count = this.carlist.length;
+            this.data.count = this.carlist.length + this.partlist.length;
+            console.log(`✅ Added car: ${res.data.name}`);
+            this.cdr.detectChanges();
+          }
+        }
+      },
+      error: (err) => {
+        console.error(`Error fetching car ${carId}:`, err);
       }
     });
   }
 
-  checkAllRequestsCompleted(completed: number, total: number): void {
-    if (completed >= total) {
-      this.isLoading = false;
-      // Sort the lists
-      this.carlist.sort((a: any, b: any) => (a.name || '').localeCompare(b.name || ''));
-      this.partlist.sort((a: any, b: any) => (a.name || '').localeCompare(b.name || ''));
-      console.log(`✅ Completed processing ${this.carlist.length} cars and ${this.partlist.length} parts`);
-      console.log(`💰 Total spent: LKR ${this.data.total.toLocaleString()}`);
-      this.cdr.detectChanges();
+  fetchPartDetails(partId: string, qty: number): void {
+    if (!partId || partId.startsWith('cart_')) {
+      console.log(`⚠️ Skipping invalid part ID: ${partId}`);
+      return;
     }
+
+    this.http.get(`${this.apiUrl}/carpart/id?id=${partId}`).subscribe({
+      next: (res: any) => {
+        if (res && res.data) {
+          const partData = res.data;
+          const unitPrice = parseFloat(partData.price) || 0;
+          
+          const existingPart = this.partlist.find((p: any) => p.id === partId);
+          
+          if (existingPart) {
+            existingPart.qty += qty;
+            existingPart.price = existingPart.originalPrice * existingPart.qty;
+            this.data.total += (unitPrice * qty);
+            console.log(`✅ Updated part: ${partData.name} (new qty: ${existingPart.qty})`);
+          } else {
+            this.partlist.push({
+              ...partData,
+              qty: qty,
+              originalPrice: unitPrice,
+              price: unitPrice * qty
+            });
+            this.data.total += (unitPrice * qty);
+            console.log(`✅ Added part: ${partData.name} (qty: ${qty})`);
+          }
+          
+          this.data.parts_count = this.partlist.length;
+          this.data.count = this.carlist.length + this.partlist.length;
+          this.cdr.detectChanges();
+        }
+      },
+      error: (err) => {
+        console.error(`Error fetching part ${partId}:`, err);
+      }
+    });
   }
 
   getProfilePic(): string {

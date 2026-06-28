@@ -338,61 +338,66 @@ export class Cart implements OnInit {
     this.router.navigate(['/parts']);
   }
 
-  checkout(): void {
+  // ==================== CHECKOUT ====================
+  
+checkout(): void {
     if (this.cartItems.length === 0) {
-      Swal.fire({
-        icon: 'info',
-        title: 'Empty Cart',
-        text: 'Your cart is empty! Add some items first.',
-        confirmButtonColor: '#6366f1'
-      });
-      return;
+        Swal.fire({
+            icon: 'info',
+            title: 'Empty Cart',
+            text: 'Your cart is empty! Add some items first.',
+            confirmButtonColor: '#6366f1'
+        });
+        return;
     }
     
     const exceededItems = this.cartItems.filter(item => item.qty > (item.stock_qty || 0));
     if (exceededItems.length > 0) {
-      const itemNames = exceededItems.map(item => item.part_name).join(', ');
-      Swal.fire({
-        icon: 'warning',
-        title: 'Stock Issues',
-        text: `Some items exceed available stock: ${itemNames}. Please update quantities.`,
-        confirmButtonColor: '#f59e0b'
-      });
-      return;
+        const itemNames = exceededItems.map(item => item.part_name).join(', ');
+        Swal.fire({
+            icon: 'warning',
+            title: 'Stock Issues',
+            text: `Some items exceed available stock: ${itemNames}. Please update quantities.`,
+            confirmButtonColor: '#f59e0b'
+        });
+        return;
     }
 
-    // Prepare payment data for cart
     const totalAmount = this.getCartTotal();
     
-    // Get cart items details for payment
+    // IMPORTANT: Create cartItemsDetails with actual part IDs
     const cartItemsDetails = this.cartItems.map(item => ({
-      part_id: item.part,
-      name: item.part_name,
-      qty: item.qty,
-      price: item.part_price,
-      total: item.total || (item.part_price * item.qty)
+        part_id: item.part,  // This is the actual part ID (e.g., 'prt_001')
+        name: item.part_name,
+        qty: item.qty,
+        price: item.part_price,
+        total: item.total || (item.part_price * item.qty)
     }));
 
+    // Use the first item's ID as the main item_id
+    const firstItem = this.cartItems[0];
+
     const paymentData = {
-      amount: totalAmount,
-      currency: 'LKR',
-      paymentType: 'part',
-      itemId: 'cart_' + Date.now(),
-      itemName: `${this.cartItems.length} items`,
-      quantity: this.cartItems.length,
-      unitPrice: totalAmount,
-      clearCart: true,
-      cartItems: cartItemsDetails,
-      metadata: {
-        cartItems: cartItemsDetails,
-        totalItems: this.cartItems.length
-      }
+        userId: this.userId,
+        amount: totalAmount,
+        currency: 'LKR',
+        paymentType: 'part',
+        itemId: firstItem ? firstItem.part : `cart_${Date.now()}`,
+        itemName: this.cartItems.length === 1 ? firstItem.part_name : `${this.cartItems.length} items`,
+        quantity: this.cartItems.reduce((sum, item) => sum + item.qty, 0),
+        unitPrice: totalAmount,
+        clearCart: true,
+        cartItems: cartItemsDetails, // THIS MUST BE SENT TO BACKEND
+        metadata: {
+            cartItems: cartItemsDetails,
+            totalItems: this.cartItems.length,
+            itemNames: this.cartItems.map(item => item.part_name).join(', ')
+        }
     };
 
-    // Store payment data in localStorage
-    localStorage.setItem('paymentData', JSON.stringify(paymentData));
+    console.log('📦 Checkout - Cart items with actual part IDs:', cartItemsDetails);
 
-    // Navigate to payment page
+    localStorage.setItem('paymentData', JSON.stringify(paymentData));
     this.router.navigate(['/payment']);
-  }
+}
 }

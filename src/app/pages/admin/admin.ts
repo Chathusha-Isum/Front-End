@@ -4,6 +4,8 @@ import { ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild, OnDestroy,
 import { Router } from '@angular/router';
 import Chart from 'chart.js/auto';
 import { forkJoin } from 'rxjs';
+import jsPDF from 'jspdf';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-admin',
@@ -99,7 +101,6 @@ export class Admin implements OnInit, AfterViewInit, OnDestroy {
   }
 
   fetchAllData(): void {
-    // Fetch users, products, parts, and payments
     forkJoin({
       users: this.http.get(`${this.apiUrl}/user`),
       products: this.http.get(`${this.apiUrl}/product`),
@@ -107,12 +108,10 @@ export class Admin implements OnInit, AfterViewInit, OnDestroy {
       payments: this.http.get(`${this.apiUrl}/payment/all`)
     }).subscribe({
       next: (results: any) => {
-        // Store users
         this.allUsers = results.users.data || [];
         this.activeUsers = this.allUsers.filter((u: any) => u.status === 'active').length;
         console.log(`✅ Loaded ${this.allUsers.length} users`);
 
-        // Store products with caching
         this.allProducts = results.products.data || [];
         this.totalProducts = this.allProducts.length;
         this.allProducts.forEach((p: any) => {
@@ -120,7 +119,6 @@ export class Admin implements OnInit, AfterViewInit, OnDestroy {
         });
         console.log(`✅ Loaded ${this.allProducts.length} products`);
 
-        // Store parts with caching
         this.allParts = results.parts.data || [];
         this.totalParts = this.allParts.length;
         this.allParts.forEach((p: any) => {
@@ -128,7 +126,6 @@ export class Admin implements OnInit, AfterViewInit, OnDestroy {
         });
         console.log(`✅ Loaded ${this.allParts.length} parts`);
 
-        // Store payments
         this.allPayments = results.payments.data || [];
         console.log(`✅ Loaded ${this.allPayments.length} payments`);
 
@@ -138,6 +135,12 @@ export class Admin implements OnInit, AfterViewInit, OnDestroy {
         console.warn('Error fetching data:', error);
         this.isLoading = false;
         this.cdr.detectChanges();
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Failed to load dashboard data. Please try again.',
+          confirmButtonText: 'OK'
+        });
       }
     });
   }
@@ -161,7 +164,6 @@ export class Admin implements OnInit, AfterViewInit, OnDestroy {
     let total = 0;
     let orderCount = 0;
 
-    // Filter only completed payments
     const completedPayments = this.allPayments.filter((p: any) => p.status === 'completed');
 
     completedPayments.forEach((payment: any) => {
@@ -178,18 +180,15 @@ export class Admin implements OnInit, AfterViewInit, OnDestroy {
   generateAllPurchases(): void {
     const purchases: any[] = [];
 
-    // Filter only completed payments
     const completedPayments = this.allPayments.filter((p: any) => p.status === 'completed');
 
     completedPayments.forEach((payment: any, index: number) => {
-      // Find user details
       const user = this.allUsers.find((u: any) => u.id === payment.user_id);
-      
+
       let itemDetails: any = {};
       let type = payment.payment_type === 'car' ? 'Car' : 'Part';
 
       if (payment.payment_type === 'car') {
-        // Car purchase
         const product = this.productCache.get(payment.item_id);
         itemDetails = {
           itemName: product?.name || payment.item_name || 'Unknown Car',
@@ -199,9 +198,7 @@ export class Admin implements OnInit, AfterViewInit, OnDestroy {
           unitPrice: parseFloat(payment.unit_price) || parseFloat(payment.amount) || 0
         };
       } else if (payment.payment_type === 'part') {
-        // Part purchase
         if (payment.cart_items) {
-          // Multiple parts from cart
           try {
             const cartItems = JSON.parse(payment.cart_items);
             itemDetails = {
@@ -213,7 +210,6 @@ export class Admin implements OnInit, AfterViewInit, OnDestroy {
               cartItems: cartItems
             };
           } catch (e) {
-            // Single part
             const part = this.partCache.get(payment.item_id);
             itemDetails = {
               itemName: part?.name || payment.item_name || 'Unknown Part',
@@ -223,7 +219,6 @@ export class Admin implements OnInit, AfterViewInit, OnDestroy {
             };
           }
         } else {
-          // Single part
           const part = this.partCache.get(payment.item_id);
           itemDetails = {
             itemName: part?.name || payment.item_name || 'Unknown Part',
@@ -258,10 +253,7 @@ export class Admin implements OnInit, AfterViewInit, OnDestroy {
       });
     });
 
-    // Sort by date (newest first)
     this.allPurchases = purchases.sort((a, b) => b.date.getTime() - a.date.getTime());
-
-    // Set recent purchases to first 10
     this.recentPurchases = this.allPurchases.slice(0, 10);
 
     console.log(`✅ Generated ${this.allPurchases.length} total purchases`);
@@ -543,71 +535,274 @@ export class Admin implements OnInit, AfterViewInit, OnDestroy {
     this.router.navigate([path]);
   }
 
+  // ==================== PDF REPORT GENERATION ====================
+
   downloadReport(): void {
-    const reportData = {
-      period: this.chartPeriod,
-      stats: {
-        totalRevenue: this.totalRevenue,
-        totalOrders: this.totalOrders,
-        activeUsers: this.activeUsers,
-        totalProducts: this.totalProducts,
-        totalParts: this.totalParts
-      },
-      revenueData: this.revenueData,
-      ordersData: this.ordersData,
-      recentPurchases: this.recentPurchases,
-      allPurchases: this.allPurchases
-    };
+    if (this.allPurchases.length === 0) {
+      Swal.fire({
+        icon: 'info',
+        title: 'No Data',
+        text: 'There is no purchase data to generate a report.',
+        confirmButtonText: 'OK'
+      });
+      return;
+    }
 
-    this.createFallbackReport(reportData);
+    this.generatePDFReport();
   }
 
-  createFallbackReport(data: any): void {
-    const reportContent = `
-===========================================
-  ADMIN DASHBOARD REPORT
-===========================================
-Generated: ${new Date().toLocaleString()}
-
-===========================================
-  SUMMARY STATISTICS
-===========================================
-Total Revenue:  ${this.formatPrice(data.stats.totalRevenue)}
-Total Orders:  ${data.stats.totalOrders}
-Active Users:  ${data.stats.activeUsers}
-Total Cars:    ${data.stats.totalProducts}
-Total Parts:   ${data.stats.totalParts}
-
-===========================================
-  REVENUE DATA (${data.period})
-===========================================
-${data.revenueData.map((d: number, i: number) =>
-      `  ${this.getChartLabels()[i] || `Day ${i + 1}`}: ${this.formatPrice(d)}`
-    ).join('\n')}
-
-===========================================
-  ORDER DISTRIBUTION
-===========================================
-${data.ordersData.labels.map((label: string, i: number) =>
-      `  ${label}: ${data.ordersData.data[i]} orders`
-    ).join('\n')}
-
-===========================================
-  ALL PURCHASES
-===========================================
-${data.allPurchases.map((purchase: any) =>
-      `  #${purchase.id} | ${purchase.customer} | ${purchase.type} | ${purchase.itemName} | ${this.formatPrice(purchase.total)}`
-    ).join('\n')}
-    `;
-
-    const blob = new Blob([reportContent], { type: 'text/plain' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `report_${new Date().toISOString().split('T')[0]}.txt`;
-    link.click();
-    window.URL.revokeObjectURL(url);
-  }
+generatePDFReport(): void {
+    try {
+        const doc = new jsPDF('p', 'mm', 'a4');
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        
+        // ===== COLORS =====
+        const primaryColor = [99, 102, 241];
+        const textDark = [30, 41, 59];
+        const textMedium = [71, 85, 105];
+        const textLight = [148, 163, 184];
+        
+        let y = 20;
+        
+        // ===== HEADER =====
+        doc.setFontSize(28);
+        doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+        doc.setFont('helvetica', 'bold');
+        doc.text('CarSale', 20, y);
+        
+        doc.setFontSize(10);
+        doc.setTextColor(textLight[0], textLight[1], textLight[2]);
+        doc.setFont('helvetica', 'normal');
+        doc.text('Auto Marketplace - Admin Report', 20, y + 6);
+        
+        doc.setFontSize(24);
+        doc.setTextColor(textDark[0], textDark[1], textDark[2]);
+        doc.setFont('helvetica', 'bold');
+        doc.text('ADMIN REPORT', pageWidth - 40, y + 4, { align: 'right' });
+        
+        y += 20;
+        
+        // ===== REPORT INFO =====
+        doc.setFontSize(9);
+        doc.setTextColor(textMedium[0], textMedium[1], textMedium[2]);
+        doc.setFont('helvetica', 'normal');
+        
+        const dateStr = new Date().toLocaleDateString();
+        const timeStr = new Date().toLocaleTimeString();
+        
+        doc.text(`Report Generated: ${dateStr} ${timeStr}`, pageWidth - 40, y, { align: 'right' });
+        doc.text(`Period: ${this.chartPeriod.charAt(0).toUpperCase() + this.chartPeriod.slice(1)}`, pageWidth - 40, y + 6, { align: 'right' });
+        
+        y += 20;
+        
+        // ===== DIVIDER =====
+        doc.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+        doc.setLineWidth(0.5);
+        doc.line(20, y, pageWidth - 20, y);
+        y += 10;
+        
+        // ===== SUMMARY STATS =====
+        doc.setFontSize(14);
+        doc.setTextColor(textDark[0], textDark[1], textDark[2]);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Summary Statistics', 20, y);
+        y += 10;
+        
+        const stats = [
+            { label: 'Total Revenue', value: this.formatPrice(this.totalRevenue) },
+            { label: 'Total Orders', value: this.totalOrders.toString() },
+            { label: 'Active Users', value: this.activeUsers.toString() },
+            { label: 'Total Products', value: (this.totalProducts + this.totalParts).toString() },
+            { label: 'Total Cars', value: this.totalProducts.toString() },
+            { label: 'Total Parts', value: this.totalParts.toString() }
+        ];
+        
+        const colWidth = (pageWidth - 40) / 3;
+        
+        stats.forEach((stat, index) => {
+            const col = index % 3;
+            const row = Math.floor(index / 3);
+            const x = 20 + (col * colWidth);
+            const yPos = y + (row * 12);
+            
+            doc.setFontSize(8);
+            doc.setTextColor(textLight[0], textLight[1], textLight[2]);
+            doc.setFont('helvetica', 'normal');
+            doc.text(stat.label, x, yPos);
+            
+            doc.setFontSize(12);
+            doc.setTextColor(textDark[0], textDark[1], textDark[2]);
+            doc.setFont('helvetica', 'bold');
+            doc.text(stat.value, x, yPos + 6);
+        });
+        
+        y += 35;
+        
+        // ===== REVENUE DATA =====
+        doc.setFontSize(12);
+        doc.setTextColor(textDark[0], textDark[1], textDark[2]);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Revenue Data', 20, y);
+        y += 6;
+        
+        doc.setFontSize(8);
+        doc.setTextColor(textMedium[0], textMedium[1], textMedium[2]);
+        doc.setFont('helvetica', 'normal');
+        
+        const revenueLabels = this.getChartLabels();
+        let revenueText = '';
+        this.revenueData.forEach((value, index) => {
+            if (index < revenueLabels.length) {
+                revenueText += `${revenueLabels[index]}: ${this.formatPrice(value)}  `;
+            }
+        });
+        doc.text(revenueText, 20, y);
+        y += 15;
+        
+        // ===== ORDER DISTRIBUTION =====
+        doc.setFontSize(12);
+        doc.setTextColor(textDark[0], textDark[1], textDark[2]);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Order Distribution', 20, y);
+        y += 6;
+        
+        doc.setFontSize(9);
+        doc.setTextColor(textMedium[0], textMedium[1], textMedium[2]);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Cars: ${this.ordersData.data[0]} orders`, 20, y);
+        doc.text(`Parts: ${this.ordersData.data[1]} orders`, 80, y);
+        y += 15;
+        
+        // ===== PURCHASES TABLE =====
+        if (y > pageHeight - 80) {
+            doc.addPage();
+            y = 20;
+        }
+        
+        doc.setFontSize(14);
+        doc.setTextColor(textDark[0], textDark[1], textDark[2]);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Purchase History', 20, y);
+        y += 10;
+        
+        // Table Header
+        doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+        doc.rect(20, y, pageWidth - 40, 8, 'F');
+        
+        doc.setFontSize(7);
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('helvetica', 'bold');
+        const headers = ['ID', 'Customer', 'Item', 'Type', 'Qty', 'Total'];
+        const colPositions = [20, 55, 90, 125, 155, 180];
+        
+        headers.forEach((header, index) => {
+            doc.text(header, colPositions[index] + 1, y + 5.5);
+        });
+        
+        y += 8;
+        
+        // ===== SORT PURCHASES: Cars first, then Parts =====
+        const sortedPurchases = [...this.allPurchases].sort((a, b) => {
+            if (a.type === 'Car' && b.type === 'Part') return -1;
+            if (a.type === 'Part' && b.type === 'Car') return 1;
+            return 0;
+        });
+        
+        // ===== SHOW ALL PURCHASES =====
+        sortedPurchases.forEach((purchase, index) => {
+            // Check if we need a new page
+            if (y > pageHeight - 20) {
+                doc.addPage();
+                y = 20;
+                // Redraw header on new page
+                doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+                doc.rect(20, y, pageWidth - 40, 8, 'F');
+                doc.setFontSize(7);
+                doc.setTextColor(255, 255, 255);
+                doc.setFont('helvetica', 'bold');
+                headers.forEach((header, idx) => {
+                    doc.text(header, colPositions[idx] + 1, y + 5.5);
+                });
+                y += 8;
+            }
+            
+            if (index % 2 === 0) {
+                doc.setFillColor(248, 250, 252);
+                doc.rect(20, y, pageWidth - 40, 6, 'F');
+            }
+            
+            doc.setFontSize(7);
+            doc.setTextColor(textDark[0], textDark[1], textDark[2]);
+            doc.setFont('helvetica', 'normal');
+            
+            const customerName = purchase.customer?.length > 12 ? purchase.customer.substring(0, 10) + '..' : purchase.customer || 'N/A';
+            const itemName = purchase.itemName?.length > 12 ? purchase.itemName.substring(0, 10) + '..' : purchase.itemName || 'N/A';
+            
+            const totalText = this.formatPrice(purchase.total || 0);
+            
+            const rowData = [
+                purchase.id || 'N/A',
+                customerName,
+                itemName,
+                purchase.type || 'N/A',
+                purchase.quantity?.toString() || '0'
+            ];
+            
+            rowData.forEach((data, colIndex) => {
+                doc.text(data, colPositions[colIndex] + 1, y + 4.5);
+            });
+            
+            // Right align total
+            doc.text(totalText, colPositions[5] + 1, y + 4.5, { align: 'right' });
+            
+            y += 6;
+        });
+        
+        // Show total count
+        if (sortedPurchases.length > 0) {
+            doc.setFontSize(8);
+            doc.setTextColor(textLight[0], textLight[1], textLight[2]);
+            doc.text(`Total: ${sortedPurchases.length} purchases`, 20, y + 5);
+            y += 10;
+        }
+        
+        // ===== FOOTER =====
+        const footerY = pageHeight - 15;
+        doc.setDrawColor(200, 200, 200);
+        doc.setLineWidth(0.3);
+        doc.line(20, footerY - 5, pageWidth - 20, footerY - 5);
+        
+        doc.setFontSize(7);
+        doc.setTextColor(textLight[0], textLight[1], textLight[2]);
+        doc.setFont('helvetica', 'normal');
+        doc.text('Generated by CarSale Admin Dashboard', pageWidth / 2, footerY + 2, { align: 'center' });
+        doc.text(`Report Date: ${new Date().toLocaleDateString()}`, pageWidth / 2, footerY + 7, { align: 'center' });
+        
+        // ===== SAVE PDF =====
+        const filename = `Admin_Report_${new Date().toISOString().split('T')[0]}.pdf`;
+        doc.save(filename);
+        
+        Swal.fire({
+            icon: 'success',
+            title: 'Report Downloaded!',
+            text: `Report has been saved as ${filename}`,
+            timer: 2000,
+            showConfirmButton: false,
+            toast: true,
+            position: 'top-end'
+        });
+        
+    } catch (error) {
+        console.error('Error generating report:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Failed to generate report. Please try again.',
+            confirmButtonText: 'OK'
+        });
+    }
+}
 
   getProfilePic(userId: string): string {
     const user = this.allUsers.find((u: any) => u.id === userId);

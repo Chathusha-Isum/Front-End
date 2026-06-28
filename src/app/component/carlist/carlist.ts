@@ -11,12 +11,14 @@ import { Router } from '@angular/router';
   styleUrls: ['./carlist.css']
 })
 export class Carlist implements OnInit, OnChanges {
-  @Input() cars: any[] = [];  // 👈 Input property
+  @Input() cars: any[] = [];
+  @Input() isLoading: boolean = false;
   list: any[] = [];
   loading = false;
   error = '';
   defaultImage = 'https://raw.githubusercontent.com/creativetimofficial/public-assets/master/ct-assets/mt-demo.jpg';
   private apiUrl = 'http://localhost:8080';
+  private hasLoaded = false;
 
   constructor(
     private http: HttpClient,
@@ -25,18 +27,22 @@ export class Carlist implements OnInit, OnChanges {
   ) { }
 
   ngOnInit(): void {
-    // If no cars provided via Input, fetch all
-    if (!this.cars || this.cars.length === 0) {
-      this.fetchData();
-    } else {
-      this.list = this.cars;
-    }
+    // Don't fetch automatically - wait for input
+    this.list = this.cars || [];
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    // Update list when input cars change
     if (changes['cars']) {
-      this.list = changes['cars'].currentValue || [];
+      const newCars = changes['cars'].currentValue;
+      if (newCars !== undefined && newCars !== null) {
+        this.list = newCars;
+        this.loading = false;
+        this.error = '';
+        this.cdr.detectChanges();
+      }
+    }
+    if (changes['isLoading']) {
+      this.loading = this.isLoading;
       this.cdr.detectChanges();
     }
   }
@@ -49,6 +55,7 @@ export class Carlist implements OnInit, OnChanges {
       next: (data: any) => {
         this.list = data.data || [];
         this.loading = false;
+        this.hasLoaded = true;
         this.cdr.detectChanges();
       },
       error: (error) => {

@@ -32,7 +32,25 @@ export class Payment implements OnInit, AfterViewInit, OnDestroy {
   public isStripeLoaded: boolean = false;
   public userId: string = '';
   public showTestCardInfo: boolean = true;
+  public cardType: string = '';
   
+  // Card Details
+  public cardDetails = {
+    number: '',
+    expiry: '',
+    cvv: '',
+    name: ''
+  };
+
+  // Card Errors
+  public cardErrors = {
+    number: '',
+    expiry: '',
+    cvv: '',
+    name: '',
+    general: ''
+  };
+
   // Test Card Info
   public testCard = {
     number: '4242 4242 4242 4242',
@@ -62,6 +80,7 @@ export class Payment implements OnInit, AfterViewInit, OnDestroy {
         next: (res: any) => {
           if (res && res.bool && res.data) {
             this.userId = res.data.id;
+            console.log('✅ User ID loaded:', this.userId);
           }
         },
         error: () => {
@@ -74,7 +93,7 @@ export class Payment implements OnInit, AfterViewInit, OnDestroy {
       this.router.navigate(['/login']);
     }
 
-    // Get payment data from route params or localStorage
+    // Get payment data
     this.loadPaymentData();
     
     // Load Stripe configuration
@@ -82,7 +101,6 @@ export class Payment implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
-    // Initialize Stripe after view is ready and config is loaded
     setTimeout(() => {
       if (this.stripePublicKey && !this.isTesting) {
         this.initStripe();
@@ -94,13 +112,10 @@ export class Payment implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    // Clean up Stripe elements
     if (this.cardElement) {
       try {
         this.cardElement.destroy();
-      } catch (e) {
-        // Ignore destroy errors
-      }
+      } catch (e) {}
     }
     if (this.elements) {
       this.elements = null;
@@ -110,33 +125,23 @@ export class Payment implements OnInit, AfterViewInit, OnDestroy {
   // ==================== LOAD DATA ====================
 
   loadPaymentData(): void {
-    // Get from route params
-    this.route.queryParams.subscribe(params => {
-      if (params['data']) {
-        try {
-          this.paymentData = JSON.parse(decodeURIComponent(params['data']));
-          this.isLoading = false;
-        } catch (e) {
-          console.error('Error parsing payment data:', e);
-          this.paymentData = null;
-        }
-      }
-    });
-
-    // If no data from params, check localStorage
-    if (!this.paymentData) {
-      const storedData = localStorage.getItem('paymentData');
-      if (storedData) {
-        try {
-          this.paymentData = JSON.parse(storedData);
-          localStorage.removeItem('paymentData');
-        } catch (e) {
-          console.error('Error parsing stored payment data:', e);
-        }
+    // Check localStorage first
+    const storedData = localStorage.getItem('paymentData');
+    if (storedData) {
+      try {
+        this.paymentData = JSON.parse(storedData);
+        console.log('📦 Payment data loaded from localStorage:', this.paymentData);
+        console.log('📦 Cart items:', this.paymentData.cartItems);
+        localStorage.removeItem('paymentData');
+        this.isLoading = false;
+        return;
+      } catch (e) {
+        console.error('Error parsing stored payment data:', e);
+        this.paymentData = null;
       }
     }
 
-    // If still no data, show error
+    // If no data, show error
     if (!this.paymentData) {
       this.isLoading = false;
       Swal.fire({
@@ -158,10 +163,8 @@ export class Payment implements OnInit, AfterViewInit, OnDestroy {
           this.stripePublicKey = res.data.stripePublicKey;
           
           if (!this.isTesting) {
-            // Load Stripe script only for live mode
             this.loadStripeScript();
           } else {
-            // In test mode, show test card info
             this.showTestCardInfo = true;
             this.isLoading = false;
             this.isStripeLoaded = true;
@@ -173,7 +176,6 @@ export class Payment implements OnInit, AfterViewInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error loading Stripe config:', error);
-        // If config fails, default to test mode
         this.isTesting = true;
         this.isLoading = false;
         this.isStripeLoaded = true;
@@ -182,13 +184,11 @@ export class Payment implements OnInit, AfterViewInit, OnDestroy {
   }
 
   loadStripeScript(): void {
-    // Check if Stripe is already loaded
     if (typeof Stripe !== 'undefined') {
       this.initStripe();
       return;
     }
 
-    // Load Stripe script
     const script = document.createElement('script');
     script.src = 'https://js.stripe.com/v3/';
     script.async = true;
@@ -198,7 +198,7 @@ export class Payment implements OnInit, AfterViewInit, OnDestroy {
     script.onerror = () => {
       console.error('Failed to load Stripe script');
       this.isLoading = false;
-      this.isStripeLoaded = true; // Allow test mode fallback
+      this.isStripeLoaded = true;
       Swal.fire({
         icon: 'warning',
         title: 'Payment System',
@@ -221,7 +221,6 @@ export class Payment implements OnInit, AfterViewInit, OnDestroy {
       this.stripe = new Stripe(this.stripePublicKey);
       this.elements = this.stripe.elements();
 
-      // Create card element
       const style = {
         base: {
           color: '#e2e8f0',
@@ -239,7 +238,6 @@ export class Payment implements OnInit, AfterViewInit, OnDestroy {
 
       this.cardElement = this.elements.create('card', { style });
       
-      // Mount card element
       const mountElement = document.querySelector('#card-element');
       if (mountElement) {
         this.cardElement.mount('#card-element');
@@ -247,7 +245,6 @@ export class Payment implements OnInit, AfterViewInit, OnDestroy {
         this.isLoading = false;
       }
 
-      // Handle card errors
       this.cardElement.on('change', (event: any) => {
         const displayError = document.querySelector('#card-errors');
         if (displayError) {
@@ -266,6 +263,133 @@ export class Payment implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  // ==================== CARD FORMATTING ====================
+
+  detectCardType(number: string): string {
+    const cleaned = number.replace(/\s/g, '');
+    if (/^4/.test(cleaned)) return 'visa';
+    if (/^5[1-5]/.test(cleaned)) return 'mastercard';
+    if (/^3[47]/.test(cleaned)) return 'amex';
+    if (/^6(?:011|5)/.test(cleaned)) return 'discover';
+    return '';
+  }
+
+  formatCardNumber(event: any): void {
+    let value = event.target.value.replace(/\D/g, '');
+    if (value.length > 16) value = value.slice(0, 16);
+    
+    this.cardType = this.detectCardType(value);
+    
+    let formatted = '';
+    for (let i = 0; i < value.length; i++) {
+      if (i > 0 && i % 4 === 0) {
+        formatted += ' ';
+      }
+      formatted += value[i];
+    }
+    this.cardDetails.number = formatted;
+    this.cardErrors.number = '';
+  }
+
+  formatExpiry(event: any): void {
+    let value = event.target.value.replace(/\D/g, '');
+    if (value.length > 4) value = value.slice(0, 4);
+    
+    let formatted = '';
+    for (let i = 0; i < value.length; i++) {
+      if (i === 2) {
+        formatted += '/';
+      }
+      formatted += value[i];
+    }
+    this.cardDetails.expiry = formatted;
+    this.cardErrors.expiry = '';
+  }
+
+  formatCvv(event: any): void {
+    let value = event.target.value.replace(/\D/g, '');
+    if (value.length > 4) value = value.slice(0, 4);
+    this.cardDetails.cvv = value;
+    this.cardErrors.cvv = '';
+  }
+
+  // ==================== AUTO-FILL TEST CARD ====================
+
+  fillTestCardDetails(): void {
+    this.cardDetails = {
+      number: this.testCard.number,
+      expiry: this.testCard.expiry,
+      cvv: this.testCard.cvv,
+      name: 'Test User'
+    };
+    this.cardType = 'visa';
+    this.cardErrors = {
+      number: '',
+      expiry: '',
+      cvv: '',
+      name: '',
+      general: ''
+    };
+    
+    Swal.fire({
+      icon: 'success',
+      title: 'Test Card Filled!',
+      text: 'Test card details have been auto-filled.',
+      timer: 1500,
+      showConfirmButton: false,
+      toast: true,
+      position: 'top-end'
+    });
+  }
+
+  // ==================== VALIDATION ====================
+
+  validateCard(): boolean {
+    this.cardErrors = {
+      number: '',
+      expiry: '',
+      cvv: '',
+      name: '',
+      general: ''
+    };
+
+    let isValid = true;
+
+    const cardNumber = this.cardDetails.number.replace(/\s/g, '');
+    if (!cardNumber || cardNumber.length < 16) {
+      this.cardErrors.number = 'Please enter a valid 16-digit card number';
+      isValid = false;
+    }
+
+    const expiryParts = this.cardDetails.expiry.split('/');
+    if (expiryParts.length !== 2) {
+      this.cardErrors.expiry = 'Please enter a valid expiry date (MM/YY)';
+      isValid = false;
+    } else {
+      const month = parseInt(expiryParts[0]);
+      const year = parseInt(expiryParts[1]);
+      const currentYear = new Date().getFullYear() % 100;
+      const currentMonth = new Date().getMonth() + 1;
+      
+      if (isNaN(month) || isNaN(year) || month < 1 || month > 12 || year < currentYear || (year === currentYear && month < currentMonth)) {
+        this.cardErrors.expiry = 'Please enter a valid expiry date (MM/YY)';
+        isValid = false;
+      }
+    }
+
+    if (!this.cardDetails.cvv || this.cardDetails.cvv.length < 3) {
+      this.cardErrors.cvv = 'Please enter a valid CVV';
+      isValid = false;
+    }
+
+    if (!this.cardDetails.name || this.cardDetails.name.trim().length < 2) {
+      this.cardErrors.name = 'Please enter the cardholder name';
+      isValid = false;
+    }
+
+    return isValid;
+  }
+
   // ==================== PAYMENT PROCESSING ====================
 
   async processPayment(): Promise<void> {
@@ -281,7 +405,6 @@ export class Payment implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    // Validate amount
     if (!this.paymentData.amount || this.paymentData.amount <= 0) {
       Swal.fire({
         icon: 'error',
@@ -292,16 +415,18 @@ export class Payment implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
+    if (!this.isTesting && !this.validateCard()) {
+      return;
+    }
+
     this.isProcessing = true;
     this.paymentStatus = null;
     this.paymentError = '';
 
     try {
       if (this.isTesting) {
-        // Use test payment
         await this.processTestPayment();
       } else {
-        // Use Stripe live payment
         await this.processLivePayment();
       }
     } catch (error: any) {
@@ -320,6 +445,7 @@ export class Payment implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async processTestPayment(): Promise<void> {
+    // Ensure cartItems is preserved
     const paymentData = {
       userId: this.userId,
       amount: this.paymentData.amount,
@@ -329,12 +455,16 @@ export class Payment implements OnInit, AfterViewInit, OnDestroy {
       itemName: this.paymentData.itemName || 'Test Purchase',
       quantity: this.paymentData.quantity || 1,
       unitPrice: this.paymentData.amount,
-      clearCart: this.paymentData.paymentType === 'cart' || this.paymentData.paymentType === 'part',
+      clearCart: this.paymentData.clearCart || false,
+      cartItems: this.paymentData.cartItems || [], // <-- IMPORTANT: Preserve cartItems
       metadata: {
         itemName: this.paymentData.itemName,
         ...this.paymentData.metadata
       }
     };
+
+    console.log('📤 Sending payment data to server:', paymentData);
+    console.log('📦 Cart items being sent:', paymentData.cartItems);
 
     this.http.post(`${this.apiUrl}/payment/process`, paymentData).subscribe({
       next: (res: any) => {
@@ -396,7 +526,6 @@ export class Payment implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    // Create payment intent
     const intentData = {
       userId: this.userId,
       amount: this.paymentData.amount,
@@ -406,6 +535,8 @@ export class Payment implements OnInit, AfterViewInit, OnDestroy {
       itemName: this.paymentData.itemName || '',
       quantity: this.paymentData.quantity || 1,
       unitPrice: this.paymentData.amount,
+      clearCart: this.paymentData.clearCart || false,
+      cartItems: this.paymentData.cartItems || [],
       metadata: {
         itemName: this.paymentData.itemName,
         ...this.paymentData.metadata
@@ -421,7 +552,6 @@ export class Payment implements OnInit, AfterViewInit, OnDestroy {
 
       const clientSecret = intentResponse.clientSecret;
 
-      // Confirm payment with Stripe
       const { error, paymentIntent } = await this.stripe.confirmCardPayment(clientSecret, {
         payment_method: {
           card: this.cardElement,
@@ -504,7 +634,6 @@ export class Payment implements OnInit, AfterViewInit, OnDestroy {
         position: 'top-end'
       });
     }).catch(() => {
-      // Fallback
       alert('Test Card: 4242 4242 4242 4242 | Exp: 12/25 | CVV: 123');
     });
   }

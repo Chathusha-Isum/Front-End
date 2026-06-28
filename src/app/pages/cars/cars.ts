@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Carlist } from '../../component/carlist/carlist';
 import { HttpClient } from '@angular/common/http';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   selector: 'app-cars',
@@ -37,7 +37,8 @@ export class Cars implements OnInit {
   constructor(
     private http: HttpClient,
     private route: ActivatedRoute,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -153,6 +154,7 @@ export class Cars implements OnInit {
     }
 
     this.filteredList = result;
+    this.cdr.detectChanges();
   }
 
   clearFilters(): void {
@@ -183,5 +185,9 @@ export class Cars implements OnInit {
 
   getTotalCount(): number {
     return this.list.length;
+  }
+
+  goBack(): void{
+    this.router.navigate(['']);
   }
 }

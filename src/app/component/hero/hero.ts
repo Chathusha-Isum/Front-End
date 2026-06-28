@@ -17,7 +17,7 @@ export class Hero implements AfterViewInit, OnDestroy {
     { position: 1, category: 'Sports', badge: 'Luxury', image: '2-2.png', color: 'red' },
     { position: 2, category: 'SUV', badge: 'Most Popular', image: '1.png', color: 'orange' },
     { position: 3, category: 'Sedan', badge: 'Comfort', image: '2-1.png', color: 'green' },
-    { position: 4, category: 'Truck', badge: 'Ride', image: '3-1.png', color: 'yellow' }
+    { position: 4, category: 'Electric', badge: 'Ride', image: '3-1.png', color: 'yellow' }
   ];
 
   private lightboxElement: HTMLElement | null = null;
@@ -95,7 +95,7 @@ export class Hero implements AfterViewInit, OnDestroy {
       'Sports': 'Super Car',
       'SUV': 'SUV',
       'Sedan': 'Sedan',
-      'Truck': 'Cab'
+      'Electric': 'Cab'
     };
     return displayNames[category] || category;
   }

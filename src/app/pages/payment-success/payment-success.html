@@ -32,6 +32,14 @@
                     <span class="text-slate-400">Item</span>
                     <span class="text-white">{{ paymentData.itemName }}</span>
                 </div>
+                <div class="flex justify-between" *ngIf="paymentData?.paymentType">
+                    <span class="text-slate-400">Type</span>
+                    <span class="text-white capitalize">{{ paymentData.paymentType }}</span>
+                </div>
+                <div class="flex justify-between" *ngIf="paymentData?.quantity">
+                    <span class="text-slate-400">Quantity</span>
+                    <span class="text-white">{{ paymentData.quantity }}</span>
+                </div>
             </div>
         </div>
 
@@ -42,8 +50,8 @@
                 Go to Dashboard
             </button>
             <button (click)="viewInvoice()" class="btn-secondary flex-1">
-                <i class="fas fa-file-invoice mr-2"></i>
-                View Invoice
+                <i class="fas fa-file-pdf mr-2"></i>
+                Download Invoice
             </button>
         </div>
 
