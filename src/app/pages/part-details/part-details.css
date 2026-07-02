@@ -1,0 +1,186 @@
+/* Loading Animation */
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.spinner {
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top: 3px solid #ec4899;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+/* Card hover effects */
+.hover\:border-pink-500\/60:hover {
+    border-color: rgba(236, 72, 153, 0.6);
+}
+
+/* Image fallback */
+img {
+    background: #1e293b;
+}
+
+/* Condition badge colors */
+.bg-emerald-500\/20 {
+    background: rgba(16, 185, 129, 0.2);
+}
+.text-emerald-200 {
+    color: #a7f3d0;
+}
+.border-emerald-500\/20 {
+    border-color: rgba(16, 185, 129, 0.2);
+}
+
+.bg-blue-500\/20 {
+    background: rgba(59, 130, 246, 0.2);
+}
+.text-blue-200 {
+    color: #bfdbfe;
+}
+.border-blue-500\/20 {
+    border-color: rgba(59, 130, 246, 0.2);
+}
+
+.bg-cyan-500\/20 {
+    background: rgba(6, 182, 212, 0.2);
+}
+.text-cyan-200 {
+    color: #a5f3fc;
+}
+.border-cyan-500\/20 {
+    border-color: rgba(6, 182, 212, 0.2);
+}
+
+.bg-green-500\/20 {
+    background: rgba(34, 197, 94, 0.2);
+}
+.text-green-200 {
+    color: #bbf7d0;
+}
+.border-green-500\/20 {
+    border-color: rgba(34, 197, 94, 0.2);
+}
+
+.bg-yellow-500\/20 {
+    background: rgba(234, 179, 8, 0.2);
+}
+.text-yellow-200 {
+    color: #fde047;
+}
+.border-yellow-500\/20 {
+    border-color: rgba(234, 179, 8, 0.2);
+}
+
+.bg-orange-500\/20 {
+    background: rgba(249, 115, 22, 0.2);
+}
+.text-orange-200 {
+    color: #fed7aa;
+}
+.border-orange-500\/20 {
+    border-color: rgba(249, 115, 22, 0.2);
+}
+
+.bg-purple-500\/20 {
+    background: rgba(139, 92, 246, 0.2);
+}
+.text-purple-200 {
+    color: #ddd6fe;
+}
+.border-purple-500\/20 {
+    border-color: rgba(139, 92, 246, 0.2);
+}
+
+.bg-gray-500\/20 {
+    background: rgba(107, 114, 128, 0.2);
+}
+.text-gray-200 {
+    color: #e5e7eb;
+}
+.border-gray-500\/20 {
+    border-color: rgba(107, 114, 128, 0.2);
+}
+
+/* Stock Status Colors */
+.text-emerald-400 {
+    color: #34d399;
+}
+.bg-emerald-500\/20 {
+    background: rgba(16, 185, 129, 0.2);
+}
+.border-emerald-500\/30 {
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+.text-yellow-400 {
+    color: #fbbf24;
+}
+.bg-yellow-500\/20 {
+    background: rgba(234, 179, 8, 0.2);
+}
+.border-yellow-500\/30 {
+    border-color: rgba(234, 179, 8, 0.3);
+}
+
+.text-red-400 {
+    color: #f87171;
+}
+.bg-red-500\/20 {
+    background: rgba(239, 68, 68, 0.2);
+}
+.border-red-500\/30 {
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* Transition */
+.transition-all {
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 300ms;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .min-h-\[300px\] {
+        min-height: 200px;
+    }
+}
+
+/* Quantity input styles */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+/* Button disabled state */
+button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #ec4899, #db2777);
+    color: white;
+    padding: 0.5rem 1.5rem;
+    border-radius: 0.75rem;
+    border: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px -5px rgba(236, 72, 153, 0.4);
+}

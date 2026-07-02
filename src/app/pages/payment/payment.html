@@ -1,0 +1,195 @@
+<div class="bg-[#0b1120] min-h-screen text-slate-200 p-4 md:p-6">
+    <div class="max-w-4xl mx-auto">
+        
+        <!-- ===== HEADER ===== -->
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-4">
+                <button (click)="goBack()" class="text-slate-400 hover:text-white transition-colors">
+                    <i class="fas fa-arrow-left text-xl"></i>
+                </button>
+                <div>
+                    <h1 class="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
+                        <i class="fas fa-credit-card text-emerald-400"></i>
+                        Payment
+                    </h1>
+                    <p class="text-slate-400 text-sm mt-1" *ngIf="!isLoading">
+                        {{ isTesting ? '🔬 TEST MODE' : '💳 SECURE PAYMENT' }}
+                    </p>
+                </div>
+            </div>
+            <div *ngIf="isTesting" class="bg-yellow-500/20 text-yellow-400 px-4 py-2 rounded-lg border border-yellow-500/20 text-sm font-medium">
+                <i class="fas fa-flask mr-2"></i> Test Mode
+            </div>
+        </div>
+
+        <!-- ===== PAYMENT STATUS ===== -->
+        <div *ngIf="paymentStatus" class="mb-6">
+            <div *ngIf="paymentStatus === 'success'" class="bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 px-4 py-3 rounded-xl flex items-center gap-3">
+                <i class="fas fa-check-circle text-2xl"></i>
+                <div>
+                    <p class="font-semibold">Payment Successful!</p>
+                    <p class="text-sm text-emerald-300/70">Transaction ID: {{ transactionId }}</p>
+                </div>
+            </div>
+            <div *ngIf="paymentStatus === 'failed'" class="bg-red-500/20 border border-red-500/30 text-red-300 px-4 py-3 rounded-xl flex items-center gap-3">
+                <i class="fas fa-times-circle text-2xl"></i>
+                <div>
+                    <p class="font-semibold">Payment Failed</p>
+                    <p class="text-sm text-red-300/70">{{ paymentError || 'Please try again.' }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== ORDER SUMMARY ===== -->
+        <div class="bg-slate-800 rounded-2xl p-6 border border-slate-700/60 mb-6">
+            <h2 class="text-lg font-semibold text-white mb-4">Order Summary</h2>
+            
+            <div *ngIf="paymentData" class="space-y-3">
+                <div class="flex justify-between text-sm">
+                    <span class="text-slate-400">Item</span>
+                    <span class="text-white font-medium">{{ paymentData.itemName || 'Purchase' }}</span>
+                </div>
+                <div class="flex justify-between text-sm" *ngIf="paymentData.quantity">
+                    <span class="text-slate-400">Quantity</span>
+                    <span class="text-white font-medium">{{ paymentData.quantity }}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-slate-400">Type</span>
+                    <span class="text-white font-medium capitalize">{{ paymentData.paymentType || 'Part' }}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-slate-400">Payment Mode</span>
+                    <span class="text-white font-medium">{{ isTesting ? 'Test Mode' : 'Live Mode' }}</span>
+                </div>
+                
+                <div class="border-t border-slate-700/60 pt-3 mt-3">
+                    <div class="flex justify-between text-lg">
+                        <span class="text-slate-400">Total Amount</span>
+                        <span class="text-emerald-300 font-bold">{{ formatPrice(paymentData.amount) }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== PAYMENT FORM ===== -->
+        <div class="bg-slate-800 rounded-2xl p-6 border border-slate-700/60">
+            <h2 class="text-lg font-semibold text-white mb-4">Payment Details</h2>
+
+            <!-- Test Mode - Auto Fill Button -->
+            <div *ngIf="isTesting" class="mb-4">
+                <button 
+                    (click)="fillTestCardDetails()"
+                    class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-2.5 px-4 rounded-xl transition-all text-sm flex items-center justify-center gap-2 border border-blue-500/30">
+                    <i class="fas fa-magic"></i>
+                    Auto-Fill Test Card Details
+                </button>
+                <p class="text-xs text-slate-500 mt-2 text-center">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    This will fill the form with test card details for quick testing
+                </p>
+            </div>
+
+            <!-- Card Number -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-slate-300 mb-1.5">
+                    <i class="fas fa-credit-card mr-2 text-emerald-400"></i>
+                    Card Number
+                </label>
+                <div class="relative">
+                    <input 
+                        type="text" 
+                        [(ngModel)]="cardDetails.number"
+                        (input)="formatCardNumber($event)"
+                        placeholder="1234 5678 9012 3456"
+                        maxlength="19"
+                        class="w-full bg-slate-900/50 text-white rounded-xl px-4 py-3 border border-slate-700/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-transparent transition-all placeholder:text-slate-500"
+                        [class.border-red-500]="cardErrors.number"
+                    >
+                    <div class="absolute right-3 top-1/2 -translate-y-1/2 flex gap-1">
+                        <i class="fab fa-cc-visa text-xl text-slate-500" *ngIf="cardType === 'visa'"></i>
+                        <i class="fab fa-cc-mastercard text-xl text-slate-500" *ngIf="cardType === 'mastercard'"></i>
+                        <i class="fab fa-cc-amex text-xl text-slate-500" *ngIf="cardType === 'amex'"></i>
+                        <i class="fab fa-cc-discover text-xl text-slate-500" *ngIf="cardType === 'discover'"></i>
+                        <i class="fas fa-credit-card text-xl text-slate-500" *ngIf="!cardType"></i>
+                    </div>
+                </div>
+                <p *ngIf="cardErrors.number" class="text-red-400 text-xs mt-1">{{ cardErrors.number }}</p>
+            </div>
+
+            <!-- Expiry Date & CVV -->
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-1.5">
+                        <i class="far fa-calendar-alt mr-2 text-emerald-400"></i>
+                        Expiry Date
+                    </label>
+                    <input 
+                        type="text" 
+                        [(ngModel)]="cardDetails.expiry"
+                        (input)="formatExpiry($event)"
+                        placeholder="MM/YY"
+                        maxlength="5"
+                        class="w-full bg-slate-900/50 text-white rounded-xl px-4 py-3 border border-slate-700/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-transparent transition-all placeholder:text-slate-500"
+                        [class.border-red-500]="cardErrors.expiry"
+                    >
+                    <p *ngIf="cardErrors.expiry" class="text-red-400 text-xs mt-1">{{ cardErrors.expiry }}</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-1.5">
+                        <i class="fas fa-lock mr-2 text-emerald-400"></i>
+                        CVV
+                    </label>
+                    <input 
+                        type="password" 
+                        [(ngModel)]="cardDetails.cvv"
+                        (input)="formatCvv($event)"
+                        placeholder="123"
+                        maxlength="4"
+                        class="w-full bg-slate-900/50 text-white rounded-xl px-4 py-3 border border-slate-700/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-transparent transition-all placeholder:text-slate-500"
+                        [class.border-red-500]="cardErrors.cvv"
+                    >
+                    <p *ngIf="cardErrors.cvv" class="text-red-400 text-xs mt-1">{{ cardErrors.cvv }}</p>
+                </div>
+            </div>
+
+            <!-- Cardholder Name -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-slate-300 mb-1.5">
+                    <i class="fas fa-user mr-2 text-emerald-400"></i>
+                    Cardholder Name
+                </label>
+                <input 
+                    type="text" 
+                    [(ngModel)]="cardDetails.name"
+                    placeholder="John Doe"
+                    class="w-full bg-slate-900/50 text-white rounded-xl px-4 py-3 border border-slate-700/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-transparent transition-all placeholder:text-slate-500"
+                    [class.border-red-500]="cardErrors.name"
+                >
+                <p *ngIf="cardErrors.name" class="text-red-400 text-xs mt-1">{{ cardErrors.name }}</p>
+            </div>
+
+            <!-- Card Errors -->
+            <div *ngIf="cardErrors.general" class="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-2 rounded-xl text-sm mb-4">
+                <i class="fas fa-exclamation-circle mr-2"></i>
+                {{ cardErrors.general }}
+            </div>
+
+            <!-- Payment Button -->
+            <button 
+                (click)="processPayment()" 
+                [disabled]="isProcessing || (!isTesting && !isStripeLoaded)"
+                class="w-full bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-xl transition-all text-lg flex items-center justify-center gap-2"
+            >
+                <i class="fas fa-spinner fa-spin" *ngIf="isProcessing"></i>
+                <i class="fas fa-lock" *ngIf="!isProcessing"></i>
+                {{ isProcessing ? 'Processing...' : (isTesting ? 'Pay Now' : 'Pay Now') }}
+            </button>
+
+            <!-- Security Notice -->
+            <p class="text-center text-xs text-slate-500 mt-4 flex items-center justify-center gap-2">
+                <i class="fas fa-lock text-emerald-400"></i>
+                <span>Your payment is secure and encrypted</span>
+            </p>
+        </div>
+    </div>
+</div>

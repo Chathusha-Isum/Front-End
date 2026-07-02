@@ -1,0 +1,64 @@
+<div class="bg-[#0b1120] min-h-screen text-slate-200 p-4 md:p-6 flex items-center justify-center">
+    <div class="max-w-md w-full text-center">
+        
+        <!-- Success Icon -->
+        <div class="w-24 h-24 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-6">
+            <i class="fas fa-check-circle text-emerald-400 text-5xl"></i>
+        </div>
+
+        <h1 class="text-3xl font-bold text-white mb-2">Payment Successful!</h1>
+        <p class="text-slate-400 mb-6">Your payment has been processed successfully.</p>
+
+        <!-- Transaction Details -->
+        <div class="bg-slate-800 rounded-2xl p-6 border border-slate-700/60 mb-6 text-left">
+            <div class="space-y-3">
+                <div class="flex justify-between">
+                    <span class="text-slate-400">Transaction ID</span>
+                    <span class="text-white font-mono text-sm">{{ transactionId }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-400">Amount Paid</span>
+                    <span class="text-emerald-300 font-bold">{{ formatPrice(amount) }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-400">Payment Method</span>
+                    <span class="text-white">{{ isTesting ? 'Test Mode' : 'Stripe' }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-400">Status</span>
+                    <span class="text-emerald-400">Completed</span>
+                </div>
+                <div class="flex justify-between" *ngIf="paymentData">
+                    <span class="text-slate-400">Item</span>
+                    <span class="text-white">{{ paymentData.itemName }}</span>
+                </div>
+                <div class="flex justify-between" *ngIf="paymentData?.paymentType">
+                    <span class="text-slate-400">Type</span>
+                    <span class="text-white capitalize">{{ paymentData.paymentType }}</span>
+                </div>
+                <div class="flex justify-between" *ngIf="paymentData?.quantity">
+                    <span class="text-slate-400">Quantity</span>
+                    <span class="text-white">{{ paymentData.quantity }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-col sm:flex-row gap-3">
+            <button (click)="goToDashboard()" class="btn-primary flex-1">
+                <i class="fas fa-home mr-2"></i>
+                Go to Dashboard
+            </button>
+            <button (click)="viewInvoice()" class="btn-secondary flex-1">
+                <i class="fas fa-file-pdf mr-2"></i>
+                Download Invoice
+            </button>
+        </div>
+
+        <!-- Email Confirmation -->
+        <p class="text-xs text-slate-500 mt-6">
+            <i class="fas fa-envelope mr-1"></i>
+            A confirmation email has been sent to your registered email address.
+        </p>
+    </div>
+</div>

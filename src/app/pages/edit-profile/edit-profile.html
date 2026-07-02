@@ -1,0 +1,179 @@
+<div class="bg-[#0b1120] min-h-screen text-slate-200 p-4 md:p-6">
+    <div class="max-w-4xl mx-auto">
+
+        <!-- Back Button -->
+        <button (click)="goBack()" 
+                class="mb-4 px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors flex items-center gap-2 text-sm text-slate-300">
+            <i class="fas fa-arrow-left"></i> Back
+        </button>
+
+        <!-- Loading State -->
+        <div *ngIf="loading" class="flex items-center justify-center h-64">
+            <div class="text-center">
+                <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-indigo-500 border-t-transparent"></div>
+                <p class="mt-4 text-slate-400">Loading profile...</p>
+            </div>
+        </div>
+
+        <!-- Profile Form -->
+        <div *ngIf="!loading && !error" class="bg-slate-800/50 rounded-3xl border border-slate-700/60 overflow-hidden">
+            <form (ngSubmit)="onSubmit()" #profileForm="ngForm">
+
+                <!-- Profile Picture Section -->
+                <div class="p-6 md:p-8 border-b border-slate-700/60">
+                    <div class="flex flex-col sm:flex-row items-center gap-6">
+                        <!-- Profile Image -->
+                        <div class="relative">
+                            <img [src]="getProfileImage()" 
+                                 [alt]="userData?.fname + ' ' + userData?.lname"
+                                 class="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover ring-4 ring-indigo-500/30 shadow-xl shadow-indigo-900/20">
+                            <label for="profilePicInput" 
+                                   class="absolute bottom-0 right-0 bg-emerald-600 hover:bg-emerald-500 text-white p-2 rounded-full cursor-pointer transition-colors shadow-lg">
+                                <i class="fas fa-camera text-sm"></i>
+                            </label>
+                            <input type="file" 
+                                   id="profilePicInput" 
+                                   (change)="onProfilePicSelected($event)" 
+                                   accept="image/*" 
+                                   class="hidden">
+                        </div>
+                        <div class="text-center sm:text-left">
+                            <h3 class="text-lg font-semibold text-white">{{ userData?.fname }} {{ userData?.lname }}</h3>
+                            <p class="text-sm text-slate-400">{{ userData?.email }}</p>
+                            <p class="text-xs text-slate-500 mt-1">
+                                <span class="bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full text-[10px]">
+                                    {{ userData?.role || 'User' }}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Fields -->
+                <div class="p-6 md:p-8 space-y-5">
+
+                    <!-- First Name & Last Name -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="form-group">
+                            <label class="form-label"><i class="fas fa-user mr-2 text-indigo-400"></i>First Name *</label>
+                            <input type="text" 
+                                   class="form-input" 
+                                   [(ngModel)]="userData.fname" 
+                                   name="fname" 
+                                   required 
+                                   placeholder="Enter your first name">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label"><i class="fas fa-user mr-2 text-indigo-400"></i>Last Name *</label>
+                            <input type="text" 
+                                   class="form-input" 
+                                   [(ngModel)]="userData.lname" 
+                                   name="lname" 
+                                   required 
+                                   placeholder="Enter your last name">
+                        </div>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="form-group">
+                        <label class="form-label"><i class="fas fa-envelope mr-2 text-indigo-400"></i>Email *</label>
+                        <input type="email" 
+                               class="form-input opacity-60 cursor-not-allowed" 
+                               [(ngModel)]="userData.email" 
+                               name="email" 
+                               required 
+                               disabled
+                               placeholder="Enter your email">
+                        <p class="text-xs text-slate-500 mt-1">Email cannot be changed</p>
+                    </div>
+
+                    <!-- Contact & Address -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="form-group">
+                            <label class="form-label"><i class="fas fa-phone mr-2 text-indigo-400"></i>Contact Number *</label>
+                            <input type="tel" 
+                                   class="form-input" 
+                                   [(ngModel)]="userData.contact" 
+                                   name="contact" 
+                                   required 
+                                   placeholder="Enter your contact number">
+                        </div>
+                    </div>
+
+                    <!-- Address -->
+                    <div class="form-group">
+                        <label class="form-label"><i class="fas fa-map-pin mr-2 text-indigo-400"></i>Address</label>
+                        <textarea class="form-input" 
+                                  [(ngModel)]="userData.address" 
+                                  name="address" 
+                                  rows="3" 
+                                  placeholder="Enter your address"></textarea>
+                    </div>
+
+                    <!-- Password Section -->
+                    <div class="border-t border-slate-700/60 pt-5 mt-5">
+                        <h4 class="text-sm font-semibold text-white flex items-center gap-2 mb-4">
+                            <i class="fas fa-lock text-indigo-400"></i> Change Password
+                        </h4>
+                        <p class="text-xs text-slate-500 mb-4">Leave blank if you don't want to change your password</p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="form-group">
+                                <label class="form-label"><i class="fas fa-key mr-2 text-indigo-400"></i>New Password</label>
+                                <input type="password" 
+                                       class="form-input" 
+                                       [(ngModel)]="newPassword" 
+                                       name="newPassword" 
+                                       placeholder="Enter new password">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label"><i class="fas fa-check-double mr-2 text-indigo-400"></i>Confirm Password</label>
+                                <input type="password" 
+                                       class="form-input" 
+                                       [(ngModel)]="confirmPassword" 
+                                       name="confirmPassword" 
+                                       placeholder="Confirm new password">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit & Cancel Buttons -->
+                    <div class="flex flex-wrap gap-4 pt-4 border-t border-slate-700/60">
+                        <button type="submit" 
+                                class="btn-submit" 
+                                [disabled]="isSubmitting || !profileForm.form.valid">
+                            <i class="fas fa-save"></i>
+                            {{ isSubmitting ? 'Saving...' : 'Save Changes' }}
+                        </button>
+                        <button type="button" 
+                                class="btn-cancel" 
+                                (click)="goBack()">
+                            <i class="fas fa-times mr-2"></i> Cancel
+                        </button>
+                    </div>
+
+                    <!-- Error/Success Message -->
+                    <div *ngIf="errorMessage" class="mt-4 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-300 text-sm">
+                        <i class="fas fa-exclamation-circle mr-2"></i> {{ errorMessage }}
+                    </div>
+                    <div *ngIf="successMessage" class="mt-4 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-300 text-sm">
+                        <i class="fas fa-check-circle mr-2"></i> {{ successMessage }}
+                    </div>
+
+                </div>
+            </form>
+        </div>
+
+        <!-- Error State -->
+        <div *ngIf="error && !loading" class="flex items-center justify-center h-64">
+            <div class="text-center">
+                <div class="text-red-400 text-xl mb-4">⚠️ {{ error }}</div>
+                <button (click)="fetchUserData()" 
+                        class="px-4 py-2 bg-indigo-500/20 text-indigo-300 rounded-lg hover:bg-indigo-500/30 transition-colors">
+                    Retry
+                </button>
+            </div>
+        </div>
+
+    </div>
+</div>

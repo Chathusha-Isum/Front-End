@@ -1,0 +1,257 @@
+<div class="bg-[#0b1120] text-slate-200 font-sans antialiased min-h-screen p-4 md:p-6">
+    <!-- Main dashboard container -->
+    <div class="w-full max-w-7xl mx-auto">
+
+        <!-- ===== HEADER ===== -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+            <div>
+                <h1 class="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
+                    Admin Dashboard
+                </h1>
+                <p class="text-slate-400 text-sm mt-1">Manage your auto marketplace</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <button (click)="downloadReport()" class="btn-primary flex items-center gap-2">
+                    <i class="fas fa-file-pdf"></i>
+                    Export Report
+                </button>
+                <button (click)="refreshData()" class="btn-secondary flex items-center gap-2">
+                    <i class="fas fa-sync-alt"></i>
+                    Refresh
+                </button>
+            </div>
+        </div>
+
+        <!-- ===== LOADING STATE ===== -->
+        <div *ngIf="isLoading" class="loading-spinner">
+            <div class="spinner"></div>
+        </div>
+
+        <!-- ===== DASHBOARD CONTENT ===== -->
+        <div *ngIf="!isLoading">
+            <!-- ===== STATS CARDS ===== -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div class="glass-card rounded-2xl p-6 stat-card border border-white/5">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-slate-400 text-sm font-medium">Total Revenue</p>
+                            <p class="text-2xl font-bold text-white mt-1">{{formatPrice(totalRevenue)}}</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                            <i class="fas fa-money-bill-wave text-emerald-400 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="mt-2 text-xs text-emerald-400">
+                        <i class="fas fa-arrow-up mr-1"></i>
+                        {{getRevenueGrowth()}}% from last month
+                    </div>
+                </div>
+
+                <div class="glass-card rounded-2xl p-6 stat-card border border-white/5">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-slate-400 text-sm font-medium">Total Orders</p>
+                            <p class="text-2xl font-bold text-white mt-1">{{totalOrders}}</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
+                            <i class="fas fa-shopping-cart text-blue-400 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="mt-2 text-xs text-blue-400">
+                        <i class="fas fa-arrow-up mr-1"></i>
+                        {{getOrderGrowth()}}% from last month
+                    </div>
+                </div>
+
+                <div class="glass-card rounded-2xl p-6 stat-card border border-white/5">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-slate-400 text-sm font-medium">Active Users</p>
+                            <p class="text-2xl font-bold text-white mt-1">{{activeUsers}}</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
+                            <i class="fas fa-users text-purple-400 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="mt-2 text-xs text-purple-400">
+                        <i class="fas fa-arrow-up mr-1"></i>
+                        {{getUserGrowth()}}% from last month
+                    </div>
+                </div>
+
+                <div class="glass-card rounded-2xl p-6 stat-card border border-white/5">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-slate-400 text-sm font-medium">Total Products</p>
+                            <p class="text-2xl font-bold text-white mt-1">{{totalProducts + totalParts}}</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-full bg-orange-500/20 flex items-center justify-center">
+                            <i class="fas fa-box text-orange-400 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="mt-2 text-xs text-orange-400">
+                        <i class="fas fa-arrow-up mr-1"></i>
+                        {{getProductGrowth()}}% from last month
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== QUICK ACTIONS ===== -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 mb-6">
+                <div class="glass-card rounded-2xl p-6 border border-white/5 hover-lift cursor-pointer"
+                    (click)="navigateTo('/manage-products')">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-indigo-500/20 flex items-center justify-center">
+                            <i class="fas fa-car text-indigo-400 text-xl"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-white font-medium">Manage Cars</h4>
+                            <p class="text-slate-400 text-xs">Add or edit car listings</p>
+                        </div>
+                        <i class="fas fa-chevron-right text-slate-500 ml-auto"></i>
+                    </div>
+                </div>
+                <div class="glass-card rounded-2xl p-6 border border-white/5 hover-lift cursor-pointer"
+                    (click)="navigateTo('/manage-parts')">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                            <i class="fas fa-cogs text-emerald-400 text-xl"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-white font-medium">Manage Parts</h4>
+                            <p class="text-slate-400 text-xs">Add or edit car parts</p>
+                        </div>
+                        <i class="fas fa-chevron-right text-slate-500 ml-auto"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== CHARTS ROW ===== -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <!-- Revenue Chart -->
+                <div class="chart-container">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-white font-semibold text-lg">Revenue Overview</h3>
+                        <div class="flex items-center gap-2">
+                            <button (click)="setChartPeriod('weekly')"
+                                [class.bg-indigo-500/30]="chartPeriod === 'weekly'"
+                                class="px-3 py-1 rounded-full text-xs transition-all hover:bg-white/10">
+                                Weekly
+                            </button>
+                            <button (click)="setChartPeriod('monthly')"
+                                [class.bg-indigo-500/30]="chartPeriod === 'monthly'"
+                                class="px-3 py-1 rounded-full text-xs transition-all hover:bg-white/10">
+                                Monthly
+                            </button>
+                            <button (click)="setChartPeriod('yearly')"
+                                [class.bg-indigo-500/30]="chartPeriod === 'yearly'"
+                                class="px-3 py-1 rounded-full text-xs transition-all hover:bg-white/10">
+                                Yearly
+                            </button>
+                        </div>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas #revenueChart></canvas>
+                    </div>
+                </div>
+
+                <!-- Orders Chart -->
+                <div class="chart-container">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-white font-semibold text-lg">Orders Distribution</h3>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas #ordersChart></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== ALL PURCHASES TABLE ===== -->
+            <div class="glass-card rounded-2xl p-6 border border-white/5">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-white font-semibold text-lg flex items-center gap-2">
+                        <i class="fas fa-shopping-bag text-indigo-400"></i>
+                        {{ showAllPurchases ? 'All Purchases' : 'Recent Purchases' }}
+                        <span class="text-xs text-slate-400 ml-2">
+                            ({{ showAllPurchases ? allPurchases.length : recentPurchases.length }} items)
+                        </span>
+                    </h3>
+                    <button (click)="toggleViewAllPurchases()"
+                        class="text-indigo-400 hover:text-indigo-300 text-sm transition-colors">
+                        {{ showAllPurchases ? 'Show Recent' : 'View All' }}
+                        <i class="fas fa-arrow-{{ showAllPurchases ? 'up' : 'right' }} ml-1"></i>
+                    </button>
+                </div>
+
+                <div class="table-container">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-white/5 text-slate-400 text-xs uppercase tracking-wider">
+                                <th class="text-left py-3 px-3 font-medium">Purchase ID</th>
+                                <th class="text-left py-3 px-3 font-medium">Customer</th>
+                                <th class="text-left py-3 px-3 font-medium">Item</th>
+                                <th class="text-left py-3 px-3 font-medium">Type</th>
+                                <th class="text-left py-3 px-3 font-medium">Qty</th>
+                                <th class="text-left py-3 px-3 font-medium">Total</th>
+                                <th class="text-left py-3 px-3 font-medium">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let purchase of (showAllPurchases ? allPurchases : recentPurchases)"
+                                class="border-b border-white/5 hover:bg-white/5 transition-colors">
+                                <td class="py-3 px-3 text-white font-mono text-xs">#{{purchase.id}}</td>
+                                <td class="py-3 px-3">
+                                    <div class="flex items-center gap-2">
+                                        <img [src]="getProfilePic(purchase.userId)"
+                                            class="w-8 h-8 rounded-full object-cover"
+                                            onerror="this.src='https://ui-avatars.com/api/?name=User&size=80&background=6366f1&color=fff&bold=true'">
+                                        <div>
+                                            <span class="text-white text-sm">{{purchase.customer}}</span>
+                                            <span class="text-slate-400 text-xs block">{{purchase.email}}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="py-3 px-3">
+                                    <div>
+                                        <span class="text-white">{{purchase.itemName}}</span>
+                                        <span *ngIf="purchase.type === 'Car'" class="text-slate-400 text-xs block">
+                                            {{purchase.itemBrand}} ({{purchase.itemYear}})
+                                        </span>
+                                        <span *ngIf="purchase.type === 'Part'" class="text-slate-400 text-xs block">
+                                            {{purchase.itemCar || 'Generic'}} - {{purchase.itemCondition}}
+                                        </span>
+                                    </div>
+                                </td>
+                                <td class="py-3 px-3">
+                                    <span class="px-2 py-1 rounded-full text-xs font-medium"
+                                        [class.bg-indigo-500/20]="purchase.type === 'Car'"
+                                        [class.bg-emerald-500/20]="purchase.type === 'Part'"
+                                        [class.text-indigo-300]="purchase.type === 'Car'"
+                                        [class.text-emerald-300]="purchase.type === 'Part'">
+                                        {{purchase.type}}
+                                    </span>
+                                </td>
+                                <td class="py-3 px-3 text-white">{{purchase.quantity}}</td>
+                                <td class="py-3 px-3 text-amber-300 font-medium">{{formatPrice(purchase.total)}}</td>
+                                <td class="py-3 px-3 text-slate-400">{{purchase.date | date:'MMM d, y'}}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <!-- Empty State -->
+                    <div *ngIf="(showAllPurchases ? allPurchases : recentPurchases).length === 0"
+                        class="text-center py-12 text-slate-400">
+                        <i class="fas fa-shopping-bag text-4xl mb-3 block opacity-30"></i>
+                        <p>No purchases found</p>
+                        <p class="text-xs mt-1">When users make purchases, they will appear here.</p>
+                    </div>
+                </div>
+
+                <!-- Footer info -->
+                <div *ngIf="showAllPurchases && allPurchases.length > 0" class="mt-4 text-xs text-slate-400 text-center">
+                    Showing all {{ allPurchases.length }} purchases
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
