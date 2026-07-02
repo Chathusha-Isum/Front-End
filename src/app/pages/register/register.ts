@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
@@ -31,9 +31,24 @@ export class Register {
   public profilePicPreview: string | null = null;
   public isLoading: boolean = false;
   public isSubmitting: boolean = false;
+  public isUploadingImage: boolean = false;
+  public errorMessage: string = '';
+  public successMessage: string = '';
+  public error: string = '';
+  public termsAccepted: boolean = false;
   private apiUrl = 'http://localhost:8080';
 
-  constructor(private http: HttpClient, private router: Router) {
+  // Password strength indicators
+  public passwordStrength: number = 0;
+  public passwordChecks = {
+    length: false,
+    uppercase: false,
+    lowercase: false,
+    number: false,
+    special: false
+  };
+
+  constructor(private http: HttpClient, private router: Router, private cdr: ChangeDetectorRef) { 
     this.generateUserId();
   }
 
@@ -41,12 +56,17 @@ export class Register {
     this.http.get(`${this.apiUrl}/user/`).subscribe({
       next: (res: any) => {
         const count = res.data ? res.data.length : 0;
-        this.user.id = "USER" + (count + 1);
+        this.user.id = "usr_" + (count + 1);
       },
       error: () => {
-        this.user.id = "USER" + Date.now();
+        this.user.id = "usr_" + Date.now();
       }
     });
+  }
+
+  // Add this method
+  getRoundedStrength(): number {
+    return Math.round(this.passwordStrength);
   }
 
   onProfilePicSelected(event: any): void {
@@ -80,15 +100,59 @@ export class Register {
       const reader = new FileReader();
       reader.onload = (e) => {
         this.profilePicPreview = e.target?.result as string;
+        this.cdr.detectChanges();
       };
       reader.readAsDataURL(file);
     }
   }
 
+  // Password strength checker
+  checkPasswordStrength(password: string): void {
+    this.passwordChecks = {
+      length: false,
+      uppercase: false,
+      lowercase: false,
+      number: false,
+      special: false
+    };
+
+    if (!password) {
+      this.passwordStrength = 0;
+      return;
+    }
+
+    this.passwordChecks.length = password.length >= 8;
+    this.passwordChecks.uppercase = /[A-Z]/.test(password);
+    this.passwordChecks.lowercase = /[a-z]/.test(password);
+    this.passwordChecks.number = /[0-9]/.test(password);
+    this.passwordChecks.special = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+    const totalChecks = 5;
+    const passedChecks = Object.values(this.passwordChecks).filter(Boolean).length;
+    this.passwordStrength = (passedChecks / totalChecks) * 100;
+
+    this.cdr.detectChanges();
+  }
+
+  getPasswordStrengthLabel(): string {
+    if (this.passwordStrength === 0) return '';
+    if (this.passwordStrength < 40) return 'Weak';
+    if (this.passwordStrength < 60) return 'Fair';
+    if (this.passwordStrength < 80) return 'Good';
+    return 'Strong';
+  }
+
+  getPasswordStrengthColor(): string {
+    if (this.passwordStrength === 0) return 'bg-gray-600';
+    if (this.passwordStrength < 40) return 'bg-red-500';
+    if (this.passwordStrength < 60) return 'bg-yellow-500';
+    if (this.passwordStrength < 80) return 'bg-blue-500';
+    return 'bg-green-500';
+  }
+
   validateForm(): boolean {
     const errors: string[] = [];
 
-    // Required fields validation
     if (!this.user.fname || this.user.fname.trim() === '') {
       errors.push('First Name is required.');
     }
@@ -103,16 +167,43 @@ export class Register {
         errors.push('Please enter a valid email address.');
       }
     }
+
     if (!this.user.password || this.user.password.trim() === '') {
       errors.push('Password is required.');
-    } else if (this.user.password.length < 6) {
-      errors.push('Password must be at least 6 characters.');
+    } else {
+      const passwordErrors: string[] = [];
+      
+      if (this.user.password.length < 8) {
+        passwordErrors.push('at least 8 characters');
+      }
+      if (!/[A-Z]/.test(this.user.password)) {
+        passwordErrors.push('at least one uppercase letter');
+      }
+      if (!/[a-z]/.test(this.user.password)) {
+        passwordErrors.push('at least one lowercase letter');
+      }
+      if (!/[0-9]/.test(this.user.password)) {
+        passwordErrors.push('at least one number');
+      }
+      if (!/[!@#$%^&*(),.?":{}|<>]/.test(this.user.password)) {
+        passwordErrors.push('at least one special character (!@#$%^&*(),.?":{}|<>)');
+      }
+
+      if (passwordErrors.length > 0) {
+        errors.push(`Password must contain: ${passwordErrors.join(', ')}`);
+      }
+
+      if (this.passwordStrength < 40) {
+        errors.push('Password is too weak. Please choose a stronger password.');
+      }
     }
+
     if (!this.user.confirm_password || this.user.confirm_password.trim() === '') {
       errors.push('Confirm Password is required.');
     } else if (this.user.password !== this.user.confirm_password) {
       errors.push('Passwords do not match.');
     }
+
     if (!this.user.address || this.user.address.trim() === '') {
       errors.push('Address is required.');
     }
@@ -120,6 +211,11 @@ export class Register {
       errors.push('Contact number is required.');
     } else if (!/^[0-9+\-\s()]+$/.test(this.user.contact)) {
       errors.push('Please enter a valid contact number.');
+    }
+
+    // Terms and Conditions validation
+    if (!this.termsAccepted) {
+      errors.push('You must agree to the Terms & Conditions.');
     }
 
     if (errors.length > 0) {
@@ -136,6 +232,34 @@ export class Register {
     return true;
   }
 
+  uploadProfileImage(): Promise<string> {
+    return new Promise((resolve, reject) => {
+      if (!this.selectedProfilePic) {
+        resolve('');
+        return;
+      }
+
+      this.isUploadingImage = true;
+      const formData = new FormData();
+      formData.append('imageFile', this.selectedProfilePic);
+
+      this.http.post(`${this.apiUrl}/api/images/profiles/upload`, formData).subscribe({
+        next: (res: any) => {
+          this.isUploadingImage = false;
+          if (res.success) {
+            resolve(res.filename);
+          } else {
+            reject(res.error || 'Failed to upload image');
+          }
+        },
+        error: (err) => {
+          this.isUploadingImage = false;
+          reject(err.error?.error || 'Failed to upload image');
+        }
+      });
+    });
+  }
+
   register() {
     if (!this.validateForm()) {
       return;
@@ -144,57 +268,77 @@ export class Register {
     this.isSubmitting = true;
     this.isLoading = true;
 
-    const formData = new FormData();
-    formData.append('id', this.user.id);
-    formData.append('fname', this.user.fname);
-    formData.append('lname', this.user.lname);
-    formData.append('email', this.user.email);
-    formData.append('password', this.user.password);
-    formData.append('confirm_password', this.user.confirm_password);
-    formData.append('address', this.user.address);
-    formData.append('contact', this.user.contact);
-    formData.append('status', this.user.status);
-    formData.append('role', this.user.role);
-
-    if (this.selectedProfilePic) {
-      formData.append('profile_pic', this.selectedProfilePic, this.selectedProfilePic.name);
-    }
-
-    this.http.post(`${this.apiUrl}/user/`, formData).subscribe({
-      next: (response: any) => {
-        this.isSubmitting = false;
-        this.isLoading = false;
-        
-        Swal.fire({
-          icon: 'success',
-          title: 'Registration Successful!',
-          text: response.message || 'Your account has been created.',
-          confirmButtonText: 'Continue'
-        }).then(() => {
-          localStorage.setItem("email", this.user.email);
-
-          // Fetch user data to store in localStorage
-          this.http.get(`${this.apiUrl}/user/email?email=${this.user.email}`).subscribe({
-            next: (res: any) => {
-              localStorage.setItem('userData', JSON.stringify(res.data));
-              this.router.navigate(['/buyer-dashboard']);
-            },
-            error: () => {
-              this.router.navigate(['/login']);
-            }
-          });
-        });
-      },
-      error: (error) => {
-        this.isSubmitting = false;
-        this.isLoading = false;
-        Swal.fire({
-          icon: 'error',
-          title: 'Registration Failed',
-          text: error.error?.message || 'Failed to create account. Please try again.',
-          confirmButtonText: 'OK'
-        });
+    this.uploadProfileImage().then((filename) => {
+      if (filename) {
+        this.user.profile_pic = filename;
       }
+
+      const userData = {
+        id: this.user.id,
+        fname: this.user.fname,
+        lname: this.user.lname,
+        email: this.user.email,
+        password: this.user.password,
+        confirm_password: this.user.confirm_password,
+        address: this.user.address,
+        contact: this.user.contact,
+        profile_pic: this.user.profile_pic,
+        status: this.user.status,
+        role: this.user.role
+      };
+
+      this.http.post(`${this.apiUrl}/user/`, userData).subscribe({
+        next: (response: any) => {
+          this.isSubmitting = false;
+          this.isLoading = false;
+          
+          Swal.fire({
+            icon: 'success',
+            title: 'Registration Successful!',
+            text: response.message || 'Your account has been created.',
+            confirmButtonText: 'Continue'
+          }).then(() => {
+            localStorage.setItem("email", this.user.email);
+
+            this.http.get(`${this.apiUrl}/user/email?email=${this.user.email}`).subscribe({
+              next: (res: any) => {
+                localStorage.setItem('userData', JSON.stringify(res.data));
+                this.router.navigate(['/buyer-dashboard']);
+              },
+              error: () => {
+                this.router.navigate(['/login']);
+              }
+            });
+          });
+        },
+        error: (error) => {
+          this.isSubmitting = false;
+          this.isLoading = false;
+          
+          if (this.user.profile_pic) {
+            this.http.delete(`${this.apiUrl}/api/images/profiles/${this.user.profile_pic}`).subscribe({
+              next: () => console.log('Cleanup: Profile image deleted'),
+              error: () => console.log('Cleanup: Failed to delete profile image')
+            });
+          }
+          
+          Swal.fire({
+            icon: 'error',
+            title: 'Registration Failed',
+            text: error.error?.message || 'Failed to create account. Please try again.',
+            confirmButtonText: 'OK'
+          });
+        }
+      });
+    }).catch((error) => {
+      this.isSubmitting = false;
+      this.isLoading = false;
+      Swal.fire({
+        icon: 'error',
+        title: 'Image Upload Failed',
+        text: error,
+        confirmButtonText: 'OK'
+      });
     });
   }
 }

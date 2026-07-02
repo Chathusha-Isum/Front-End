@@ -43,11 +43,96 @@
                 <input type="text" placeholder="Street Address" [(ngModel)]="user.address" name="address"
                     class="w-full bg-[#1c1c24] text-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-600">
                     
-                <input type="password" placeholder="Enter your password" [(ngModel)]="user.password" name="password"
-                    class="w-full bg-[#1c1c24] text-white rounded-lg p-3 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-600">
+                <!-- Password with strength indicator -->
+                <div class="space-y-2">
+                    <input type="password" 
+                           placeholder="Enter your password" 
+                           [(ngModel)]="user.password" 
+                           name="password"
+                           (input)="checkPasswordStrength(user.password)"
+                           class="w-full bg-[#1c1c24] text-white rounded-lg p-3 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-600">
+                    
+                    <!-- Password Strength Bar -->
+                    <div *ngIf="user.password" class="space-y-1">
+                        <div class="w-full h-2 bg-gray-700 rounded-full overflow-hidden">
+                            <div class="h-full transition-all duration-300 rounded-full" 
+                                 [style.width.%]="passwordStrength"
+                                 [style.background-color]="getPasswordStrengthColor()">
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs text-gray-400">
+                                Strength: <span class="font-semibold" [style.color]="getPasswordStrengthColor()">
+                                    {{ getPasswordStrengthLabel() }}
+                                </span>
+                            </span>
+                            <span class="text-xs text-gray-500">{{ getRoundedStrength() }}%</span>
+                        </div>
+                        
+                        <!-- Password Requirements Checklist -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-1 mt-2">
+                            <div class="flex items-center space-x-2">
+                                <span [class.text-green-500]="passwordChecks.length" [class.text-gray-500]="!passwordChecks.length">
+                                    {{ passwordChecks.length ? '✅' : '⬜' }}
+                                </span>
+                                <span class="text-xs" [class.text-green-400]="passwordChecks.length" [class.text-gray-400]="!passwordChecks.length">
+                                    At least 8 characters
+                                </span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span [class.text-green-500]="passwordChecks.uppercase" [class.text-gray-500]="!passwordChecks.uppercase">
+                                    {{ passwordChecks.uppercase ? '✅' : '⬜' }}
+                                </span>
+                                <span class="text-xs" [class.text-green-400]="passwordChecks.uppercase" [class.text-gray-400]="!passwordChecks.uppercase">
+                                    One uppercase letter
+                                </span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span [class.text-green-500]="passwordChecks.lowercase" [class.text-gray-500]="!passwordChecks.lowercase">
+                                    {{ passwordChecks.lowercase ? '✅' : '⬜' }}
+                                </span>
+                                <span class="text-xs" [class.text-green-400]="passwordChecks.lowercase" [class.text-gray-400]="!passwordChecks.lowercase">
+                                    One lowercase letter
+                                </span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span [class.text-green-500]="passwordChecks.number" [class.text-gray-500]="!passwordChecks.number">
+                                    {{ passwordChecks.number ? '✅' : '⬜' }}
+                                </span>
+                                <span class="text-xs" [class.text-green-400]="passwordChecks.number" [class.text-gray-400]="!passwordChecks.number">
+                                    One number
+                                </span>
+                            </div>
+                            <div class="flex items-center space-x-2 md:col-span-2">
+                                <span [class.text-green-500]="passwordChecks.special" [class.text-gray-500]="!passwordChecks.special">
+                                    {{ passwordChecks.special ? '✅' : '⬜' }}
+                                </span>
+                                <span class="text-xs" [class.text-green-400]="passwordChecks.special" [class.text-gray-400]="!passwordChecks.special">
+                                    One special character
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                <input type="password" placeholder="Confirm your password" [(ngModel)]="user.confirm_password" name="confirm_password"
-                    class="w-full bg-[#1c1c24] text-white rounded-lg p-3 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-600">
+                <!-- Confirm Password -->
+                <div class="space-y-1">
+                    <input type="password" 
+                           placeholder="Confirm your password" 
+                           [(ngModel)]="user.confirm_password" 
+                           name="confirm_password"
+                           class="w-full bg-[#1c1c24] text-white rounded-lg p-3 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-600">
+                    
+                    <!-- Password Match Indicator -->
+                    <div *ngIf="user.confirm_password" class="text-xs flex items-center space-x-2">
+                        <span *ngIf="user.password === user.confirm_password" class="text-green-400">
+                            ✅ Passwords match
+                        </span>
+                        <span *ngIf="user.password !== user.confirm_password" class="text-red-400">
+                            ❌ Passwords do not match
+                        </span>
+                    </div>
+                </div>
 
                 <!-- Profile Picture Upload -->
                 <div class="space-y-2">
@@ -65,10 +150,9 @@
 
                 <!-- Terms and Conditions -->
                 <label class="flex items-center space-x-2 cursor-pointer">
-                    <input type="checkbox"
+                    <input type="checkbox" [(ngModel)]="termsAccepted" name="terms"
                         class="rounded bg-[#1c1c24] border-gray-600 text-blue-600 focus:ring-blue-600">
-                    <span class="text-gray-400">I agree to <a href="#" class="text-white hover:underline">Terms &amp;
-                            Conditions</a></span>
+                    <span class="text-gray-400">I agree to <a href="#" class="text-white hover:underline">Terms &amp; Conditions</a></span>
                 </label>
 
                 <!-- Submit Button -->
