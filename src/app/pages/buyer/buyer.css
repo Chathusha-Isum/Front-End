@@ -1,0 +1,81 @@
+/* subtle glass effect & smooth transitions */
+.glass-card {
+  background: rgba(30, 41, 59, 0.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.hover-lift:hover {
+  transform: translateY(-3px);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 12px 30px -8px rgba(0, 0, 0, 0.6);
+}
+
+.badge-pill {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+/* Table container for horizontal scroll */
+.table-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Table styles */
+table {
+  border-collapse: collapse;
+  min-width: 600px;
+}
+
+th {
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+/* Condition badge colors */
+.bg-emerald-500\/20 {
+  background: rgba(16, 185, 129, 0.2);
+}
+.text-emerald-300 {
+  color: #6ee7b7;
+}
+
+.bg-blue-500\/20 {
+  background: rgba(59, 130, 246, 0.2);
+}
+.text-blue-300 {
+  color: #93c5fd;
+}
+
+.bg-amber-500\/20 {
+  background: rgba(245, 158, 11, 0.2);
+}
+.text-amber-300 {
+  color: #fcd34d;
+}
+
+/* scrollbar style */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #0f172a; }
+::-webkit-scrollbar-thumb { background: #334155; border-radius: 12px; }
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .glass-card {
+    padding: 1rem;
+  }
+  
+  .text-2xl {
+    font-size: 1.25rem;
+  }
+  
+  table {
+    font-size: 0.75rem;
+  }
+  
+  th, td {
+    padding: 0.5rem 0.5rem !important;
+  }
+}
