@@ -352,8 +352,8 @@ export class ManageCars implements OnInit, OnDestroy {
       const file: File = input.files[0];
       
       // Validate file size (max 50MB for 3D models)
-      if (file.size > 50 * 1024 * 1024) {
-        Swal.fire('File Too Large', 'Model file exceeds 50MB limit. Please choose a smaller file.', 'warning');
+      if (file.size > 250 * 1024 * 1024) {
+        Swal.fire('File Too Large', 'Model file exceeds 250MB limit. Please choose a smaller file.', 'warning');
         input.value = '';
         return;
       }
