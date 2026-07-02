@@ -1,0 +1,195 @@
+<div class="w-full max-w-[1200px] bg-black overflow-hidden shadow-2xl flex flex-col md:flex-row justify-self-center">
+    <!-- Left Section -->
+    <div class="w-full md:w-1/2 relative">
+        <a href="" class="absolute top-6 left-6 text-white text-2xl font-bold z-10">Cruiser Premium</a>
+        <a href=""
+            class="absolute top-6 right-6 bg-white/10 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm hover:bg-white/20 transition-colors z-10">
+            Back to website →
+        </a>
+        <div class="relative h-full">
+            <img src="img/register.jpeg"
+                alt="Desert landscape" class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-blue-900/30"></div>
+            <div class="absolute bottom-12 left-12 text-white">
+                <h2 class="text-2xl md:text-4xl font-semibold mb-2">Where Quality</h2>
+                <h2 class="text-2xl md:text-4xl font-semibold">Meets the Road</h2>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Section -->
+    <div class="w-full md:w-1/2 p-6 md:p-12 overflow-y-auto max-h-[90vh]">
+        <div class="max-w-md mx-auto">
+            <h1 class="text-white text-2xl md:text-4xl font-semibold mb-2">Create an account</h1>
+            <p class="text-gray-400 mb-8">
+                Already have an account?
+                <a href="login" class="text-white hover:underline">Log in</a>
+            </p>
+
+            <form class="space-y-4">
+                <div class="flex flex-col md:flex-row gap-4">
+                    <input type="text" placeholder="First name" name="fname" [(ngModel)]="user.fname"
+                        class="w-full md:w-1/2 bg-[#1c1c24] text-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-600">
+                    <input type="text" placeholder="Last name" name="lname" [(ngModel)]="user.lname"
+                        class="w-full md:w-1/2 bg-[#1c1c24] text-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-600">
+                </div>
+
+                <input type="email" placeholder="Email" [(ngModel)]="user.email" name="email"
+                    class="w-full bg-[#1c1c24] text-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-600">
+
+                <input type="tel" placeholder="Contact Number" [(ngModel)]="user.contact" name="contact"
+                    class="w-full bg-[#1c1c24] text-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-600">
+
+                <input type="text" placeholder="Street Address" [(ngModel)]="user.address" name="address"
+                    class="w-full bg-[#1c1c24] text-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-600">
+                    
+                <!-- Password with strength indicator -->
+                <div class="space-y-2">
+                    <input type="password" 
+                           placeholder="Enter your password" 
+                           [(ngModel)]="user.password" 
+                           name="password"
+                           (input)="checkPasswordStrength(user.password)"
+                           class="w-full bg-[#1c1c24] text-white rounded-lg p-3 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-600">
+                    
+                    <!-- Password Strength Bar -->
+                    <div *ngIf="user.password" class="space-y-1">
+                        <div class="w-full h-2 bg-gray-700 rounded-full overflow-hidden">
+                            <div class="h-full transition-all duration-300 rounded-full" 
+                                 [style.width.%]="passwordStrength"
+                                 [style.background-color]="getPasswordStrengthColor()">
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs text-gray-400">
+                                Strength: <span class="font-semibold" [style.color]="getPasswordStrengthColor()">
+                                    {{ getPasswordStrengthLabel() }}
+                                </span>
+                            </span>
+                            <span class="text-xs text-gray-500">{{ getRoundedStrength() }}%</span>
+                        </div>
+                        
+                        <!-- Password Requirements Checklist -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-1 mt-2">
+                            <div class="flex items-center space-x-2">
+                                <span [class.text-green-500]="passwordChecks.length" [class.text-gray-500]="!passwordChecks.length">
+                                    {{ passwordChecks.length ? '✅' : '⬜' }}
+                                </span>
+                                <span class="text-xs" [class.text-green-400]="passwordChecks.length" [class.text-gray-400]="!passwordChecks.length">
+                                    At least 8 characters
+                                </span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span [class.text-green-500]="passwordChecks.uppercase" [class.text-gray-500]="!passwordChecks.uppercase">
+                                    {{ passwordChecks.uppercase ? '✅' : '⬜' }}
+                                </span>
+                                <span class="text-xs" [class.text-green-400]="passwordChecks.uppercase" [class.text-gray-400]="!passwordChecks.uppercase">
+                                    One uppercase letter
+                                </span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span [class.text-green-500]="passwordChecks.lowercase" [class.text-gray-500]="!passwordChecks.lowercase">
+                                    {{ passwordChecks.lowercase ? '✅' : '⬜' }}
+                                </span>
+                                <span class="text-xs" [class.text-green-400]="passwordChecks.lowercase" [class.text-gray-400]="!passwordChecks.lowercase">
+                                    One lowercase letter
+                                </span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span [class.text-green-500]="passwordChecks.number" [class.text-gray-500]="!passwordChecks.number">
+                                    {{ passwordChecks.number ? '✅' : '⬜' }}
+                                </span>
+                                <span class="text-xs" [class.text-green-400]="passwordChecks.number" [class.text-gray-400]="!passwordChecks.number">
+                                    One number
+                                </span>
+                            </div>
+                            <div class="flex items-center space-x-2 md:col-span-2">
+                                <span [class.text-green-500]="passwordChecks.special" [class.text-gray-500]="!passwordChecks.special">
+                                    {{ passwordChecks.special ? '✅' : '⬜' }}
+                                </span>
+                                <span class="text-xs" [class.text-green-400]="passwordChecks.special" [class.text-gray-400]="!passwordChecks.special">
+                                    One special character
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Confirm Password -->
+                <div class="space-y-1">
+                    <input type="password" 
+                           placeholder="Confirm your password" 
+                           [(ngModel)]="user.confirm_password" 
+                           name="confirm_password"
+                           class="w-full bg-[#1c1c24] text-white rounded-lg p-3 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-600">
+                    
+                    <!-- Password Match Indicator -->
+                    <div *ngIf="user.confirm_password" class="text-xs flex items-center space-x-2">
+                        <span *ngIf="user.password === user.confirm_password" class="text-green-400">
+                            ✅ Passwords match
+                        </span>
+                        <span *ngIf="user.password !== user.confirm_password" class="text-red-400">
+                            ❌ Passwords do not match
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Profile Picture Upload -->
+                <div class="space-y-2">
+                    <label class="text-gray-400 text-sm block">Profile Picture</label>
+                    <div class="flex items-center gap-4">
+                        <div class="relative">
+                            <input type="file" (change)="onProfilePicSelected($event)" accept="image/*"
+                                class="w-full bg-[#1c1c24] text-white rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700">
+                        </div>
+                        <div *ngIf="profilePicPreview" class="flex-shrink-0">
+                            <img [src]="profilePicPreview" alt="Profile Preview" class="w-14 h-14 rounded-full object-cover border-2 border-blue-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Terms and Conditions -->
+                <label class="flex items-center space-x-2 cursor-pointer">
+                    <input type="checkbox" [(ngModel)]="termsAccepted" name="terms"
+                        class="rounded bg-[#1c1c24] border-gray-600 text-blue-600 focus:ring-blue-600">
+                    <span class="text-gray-400">I agree to <a href="#" class="text-white hover:underline">Terms &amp; Conditions</a></span>
+                </label>
+
+                <!-- Submit Button -->
+                <button type="submit"
+                    class="w-full bg-blue-600 text-white rounded-lg p-3 hover:bg-blue-700 transition-colors"
+                    (click)="register()">
+                    Create account
+                </button>
+
+                <div class="relative my-8">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-gray-700"></div>
+                    </div>
+                    <div class="relative flex justify-center text-sm">
+                        <span class="px-2 bg-[#13131a] text-gray-400">Or register with</span>
+                    </div>
+                </div>
+
+                <div class="flex flex-col md:flex-row gap-4">
+                    <button type="button"
+                        class="w-full md:w-1/2 flex items-center justify-center gap-2 bg-[#1c1c24] text-white rounded-lg p-3 hover:bg-[#25252e] transition-colors">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24">
+                            <path fill="currentColor"
+                                d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z" />
+                        </svg>
+                        Google
+                    </button>
+                    <button type="button"
+                        class="w-full md:w-1/2 flex items-center justify-center gap-2 bg-[#1c1c24] text-white rounded-lg p-3 hover:bg-[#25252e] transition-colors">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24">
+                            <path fill="currentColor"
+                                d="M17.05,11.97 C17.0389275,10.3054167 18.4521905,9.39916667 18.5,9.36833333 C17.6895905,8.17 16.4353095,7.94416667 15.9415476,7.91916667 C14.9047619,7.81166667 13.9057143,8.49333333 13.3790476,8.49333333 C12.8335714,8.49333333 11.9902381,7.93083333 11.1297619,7.94416667 C10.0233333,7.95916667 8.99642857,8.57583333 8.41309524,9.54833333 C7.20119048,11.5375 8.11357143,14.4758333 9.27357143,16.0708333 C9.86357143,16.8533333 10.5511905,17.7283333 11.4597619,17.7016667 C12.3422619,17.6716667 12.6915476,17.1466667 13.7473809,17.1466667 C14.7897619,17.1466667 15.1161905,17.7016667 16.0422619,17.6866667 C16.995,17.6716667 17.5922619,16.8925 18.1647619,16.1 C18.8576191,15.1866667 19.1397619,14.2916667 19.1522619,14.2466667 C19.1272619,14.2375 17.0647619,13.4366667 17.05,11.97" />
+                        </svg>
+                        Apple
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
