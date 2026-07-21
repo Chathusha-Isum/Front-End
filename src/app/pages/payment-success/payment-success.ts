@@ -172,7 +172,7 @@ generateInvoicePDF(): void {
         doc.setFontSize(28);
         doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
         doc.setFont('helvetica', 'bold');
-        doc.text('CarSale', 20, y);
+        doc.text('CruserPremium', 20, y);
         
         doc.setFontSize(10);
         doc.setTextColor(textLight[0], textLight[1], textLight[2]);
@@ -344,7 +344,7 @@ generateInvoicePDF(): void {
         doc.setTextColor(textLight[0], textLight[1], textLight[2]);
         doc.setFont('helvetica', 'normal');
         doc.text('Thank you for your purchase!', pageWidth / 2, footerY + 2, { align: 'center' });
-        doc.text('For any queries, please contact support@carsale.com', pageWidth / 2, footerY + 8, { align: 'center' });
+        doc.text('For any queries, please contact support@cruserpremium.com', pageWidth / 2, footerY + 8, { align: 'center' });
         
         // ===== SAVE PDF =====
         const filename = `Invoice_${this.transactionId}.pdf`;

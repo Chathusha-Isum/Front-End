@@ -569,7 +569,7 @@ generatePDFReport(): void {
         doc.setFontSize(28);
         doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
         doc.setFont('helvetica', 'bold');
-        doc.text('CarSale', 20, y);
+        doc.text('CruserPremium', 20, y);
         
         doc.setFontSize(10);
         doc.setTextColor(textLight[0], textLight[1], textLight[2]);
