@@ -4,7 +4,7 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
+    min-height: 120vh;
     position: relative;
     overflow-x: hidden;
     overflow-y: hidden;
@@ -29,7 +29,6 @@
     cursor: pointer;
     transition: all 0.3s ease;
     position: relative;
-    border-radius: 0px;
     overflow: visible;
     display: flex;
     flex-direction: column;
@@ -46,8 +45,8 @@
 }
 
 .depth-btn[data-pos="1"] {
-    transform: scale(0.92);
-    transform: translateX(20px);
+    transform: scale(0.95);
+    transform: translateX(10px);
     margin-right: -45px;
     margin-left: -10px;
 }
@@ -57,13 +56,15 @@
     transform: translateY(50px);
     margin-left: -20px;
     margin-right: -20px;
+    Z-index: 2;
 }
 
 .depth-btn[data-pos="3"] {
     transform: scale(0.92);
-    transform: translateX(-20px);
+    transform: translateX(-2px);
     margin-left: -45px;
     margin-right: -10px;
+    Z-index: 1;
 }
 
 .depth-btn[data-pos="4"] {
@@ -165,8 +166,8 @@
 }
 
 /* Glow effect for center button */
-.depth-btn .image-container {
-    filter: drop-shadow(0 0 25px rgba(102, 126, 234, 0.6));
+.depth-btn .image-container:hover {
+    filter: drop-shadow(0 0 25px rgba(244, 244, 246, 0.6));
 }
 
 .depth-btn:hover::after {
